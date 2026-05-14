@@ -94,6 +94,7 @@ class PDFExtractorConfig:
     subject_override: Optional[str] = None
     no_ocr: bool = False
     dry_run: bool = False
+    resume: bool = False
     hf_test_split: float = 0.10
     hf_shuffle_seed: int = 42
 
@@ -892,14 +893,16 @@ def _extractive_summary(text: str, n: int = 3) -> str:
 
 class DatasetWriter:
     def write_subject(self, chunks: List[Chunk], output_dir: Path,
-                      subject: str) -> None:
+                      subject: str, append: bool = False) -> None:
         subj_dir = output_dir / subject
         subj_dir.mkdir(parents=True, exist_ok=True)
         out = subj_dir / f"{subject}_chunks.jsonl"
-        with open(out, 'w', encoding='utf-8') as f:
+        mode = 'a' if append and out.exists() else 'w'
+        with open(out, mode, encoding='utf-8') as f:
             for chunk in chunks:
                 f.write(json.dumps(self._pretrain_record(chunk), ensure_ascii=False) + '\n')
-        log.info(f"    Saved {len(chunks)} chunks → {out}")
+        action = "Appended" if mode == 'a' else "Saved"
+        log.info(f"    {action} {len(chunks)} chunks → {out}")
 
     def write_metadata(self, result: ProcessingResult, output_dir: Path,
                        subject: str) -> None:
@@ -976,9 +979,29 @@ class FolderProcessor:
             log.warning(f"No PDFs found in {folder}")
             return []
 
+        subj_dir = output_dir / subj
+
+        # Resume: filter out already-processed PDFs
+        if self.config.resume:
+            pending, skipped = [], []
+            for pdf in pdfs:
+                meta_file = subj_dir / f"{pdf.stem}_metadata.json"
+                if meta_file.exists():
+                    skipped.append(pdf.name)
+                else:
+                    pending.append(pdf)
+            if skipped:
+                log.info(f"  [resume] Skipping {len(skipped)} already done: "
+                         + ", ".join(skipped[:3]) + ("..." if len(skipped) > 3 else ""))
+            pdfs = pending
+
         log.info(f"\n{'='*60}")
-        log.info(f"Subject: {subj}  ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''})")
+        log.info(f"Subject: {subj}  ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''} to process)")
         log.info(f"{'='*60}")
+
+        if not pdfs:
+            log.info(f"  All PDFs already processed — skipping subject '{subj}'")
+            return []
 
         all_chunks: List[Chunk] = []
         for pdf in pdfs:
@@ -988,9 +1011,11 @@ class FolderProcessor:
                 self.writer.write_metadata(result, output_dir, subj)
 
         if all_chunks and not self.config.dry_run:
-            self.writer.write_subject(all_chunks, output_dir, subj)
+            # Append to existing JSONL if resuming, otherwise overwrite
+            self.writer.write_subject(all_chunks, output_dir, subj,
+                                      append=self.config.resume)
 
-        log.info(f"Subject '{subj}': {len(all_chunks)} total chunks")
+        log.info(f"Subject '{subj}': {len(all_chunks)} new chunks")
         return all_chunks
 
 
@@ -1004,7 +1029,27 @@ class DatasetMerger:
         self.writer = DatasetWriter()
 
     def merge(self, all_chunks: List[Chunk], output_dir: Path) -> None:
-        if not all_chunks:
+        # When resuming, also load chunks from already-processed subject JSONLs
+        existing_records: List[dict] = []
+        for jsonl_file in sorted(output_dir.glob("*/*_chunks.jsonl")):
+            if jsonl_file.parent.name == "combined":
+                continue
+            try:
+                with open(jsonl_file, encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            existing_records.append(json.loads(line))
+            except Exception as e:
+                log.warning(f"Could not read {jsonl_file}: {e}")
+
+        # Merge: existing records from disk + new chunks from this run
+        new_ids = {c.chunk_id for c in all_chunks}
+        deduped_existing = [r for r in existing_records if r.get("id") not in new_ids]
+        new_records = [self.writer._pretrain_record(c) for c in all_chunks]
+        all_records = deduped_existing + new_records
+
+        if not all_records:
             log.warning("No chunks to merge.")
             return
 
@@ -1013,36 +1058,46 @@ class DatasetMerger:
 
         import random
         rng = random.Random(self.config.hf_shuffle_seed)
-        shuffled = all_chunks[:]
-        rng.shuffle(shuffled)
+        rng.shuffle(all_records)
 
         # Stage 1 — pretrain JSONL (plain text, no special tokens)
         pretrain_path = combined_dir / "unified_pretrain.jsonl"
         with open(pretrain_path, 'w', encoding='utf-8') as f:
-            for chunk in shuffled:
-                f.write(json.dumps(self.writer._pretrain_record(chunk),
-                                   ensure_ascii=False) + '\n')
-        log.info(f"Pretrain JSONL: {pretrain_path}  ({len(shuffled)} records)")
+            for rec in all_records:
+                f.write(json.dumps(rec, ensure_ascii=False) + '\n')
+        log.info(f"Pretrain JSONL: {pretrain_path}  ({len(all_records)} records)")
 
         # Stage 2 — SFT JSONL (Gemma 2 chat format)
-        sft_chunks = [c for c in shuffled if c.word_count >= 50]
         sft_path = combined_dir / "unified_sft.jsonl"
+        sft_count = 0
         with open(sft_path, 'w', encoding='utf-8') as f:
-            for chunk in sft_chunks:
-                f.write(json.dumps(self.writer._sft_record(chunk),
-                                   ensure_ascii=False) + '\n')
-        log.info(f"SFT JSONL:     {sft_path}  ({len(sft_chunks)} records)")
+            for rec in all_records:
+                if rec.get("word_count", 0) >= 50:
+                    sft_rec = {
+                        "id": rec["id"] + "_sft",
+                        "text": _SFT_TEMPLATE.format(
+                            subject=rec.get("subject", ""),
+                            text=rec["text"],
+                            summary=_extractive_summary(rec["text"]),
+                        ),
+                        "subject": rec.get("subject", ""),
+                        "source_file": rec.get("source_file", ""),
+                        "chunk_index": rec.get("chunk_index", 0),
+                        "language": rec.get("language", "en"),
+                    }
+                    f.write(json.dumps(sft_rec, ensure_ascii=False) + '\n')
+                    sft_count += 1
+        log.info(f"SFT JSONL:     {sft_path}  ({sft_count} records)")
 
         # HuggingFace Dataset
         if HAS_DATASETS:
-            self._save_hf_dataset(shuffled, combined_dir)
+            self._save_hf_dataset(all_records, combined_dir)
         else:
             log.warning("datasets package not found — skipping HuggingFace Dataset output")
 
-        self._print_summary(shuffled, combined_dir)
+        self._print_summary(all_records, combined_dir)
 
-    def _save_hf_dataset(self, chunks: List[Chunk], combined_dir: Path) -> None:
-        records = [self.writer._pretrain_record(c) for c in chunks]
+    def _save_hf_dataset(self, records: List[dict], combined_dir: Path) -> None:
         ds = Dataset.from_list(records)
         split_idx = int(len(ds) * (1.0 - self.config.hf_test_split))
         dd = DatasetDict({
@@ -1054,15 +1109,15 @@ class DatasetMerger:
         log.info(f"HF Dataset:    {hf_path}  "
                  f"(train={len(dd['train'])}, test={len(dd['test'])})")
 
-    def _print_summary(self, chunks: List[Chunk], combined_dir: Path) -> None:
-        by_subject = Counter(c.subject for c in chunks)
-        by_lang = Counter(c.language for c in chunks)
-        by_strategy = Counter(c.extraction_strategy for c in chunks)
-        mean_q = sum(c.quality_score for c in chunks) / max(1, len(chunks))
+    def _print_summary(self, records: List[dict], combined_dir: Path) -> None:
+        by_subject = Counter(r.get("subject", "unknown") for r in records)
+        by_lang = Counter(r.get("language", "en") for r in records)
+        by_strategy = Counter(r.get("extraction_strategy", "unknown") for r in records)
+        mean_q = sum(r.get("quality_score", 0) for r in records) / max(1, len(records))
 
         summary = {
-            "total_chunks": len(chunks),
-            "total_words": sum(c.word_count for c in chunks),
+            "total_chunks": len(records),
+            "total_words": sum(r.get("word_count", 0) for r in records),
             "mean_quality_score": round(mean_q, 4),
             "by_subject": dict(sorted(by_subject.items())),
             "by_language": dict(sorted(by_lang.items())),
@@ -1136,6 +1191,8 @@ Examples:
                    help="Disable OCR — fast but Type3/scanned PDFs are skipped")
     p.add_argument("--no-merge", action="store_true",
                    help="Skip creating unified combined dataset")
+    p.add_argument("--resume", action="store_true",
+                   help="Skip PDFs that already have a metadata file (safe restart)")
     p.add_argument("--dry-run", action="store_true",
                    help="Classify pages and show OCR plan, do not extract")
     p.add_argument("--log-level", default="INFO",
@@ -1157,6 +1214,7 @@ def main() -> None:
         ocr_language=args.ocr_lang,
         no_ocr=args.no_ocr,
         dry_run=args.dry_run,
+        resume=args.resume,
         recursive=args.recursive,
         subject_override=args.subject,
         output_dir=args.output,
