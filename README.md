@@ -21,7 +21,7 @@ This script detects corruption **per page** and automatically routes affected pa
 
 ### Python Dependencies
 ```bash
-cd /Users/satyamurti/Downloads/DataSets
+cd $HOME/Downloads/DataSets
 python3 -m venv .venv
 source .venv/bin/activate
 pip install pymupdf pdfplumber pdf2image pillow pytesseract langdetect datasets
@@ -43,7 +43,7 @@ python3 -c "import fitz, pdfplumber, pytesseract; print('OK')"
 ## Quick Start
 
 ```bash
-cd /Users/satyamurti/Downloads/DataSets
+cd $HOME/Downloads/DataSets
 source .venv/bin/activate
 
 # Single subject folder
