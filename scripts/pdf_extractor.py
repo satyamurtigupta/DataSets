@@ -30,18 +30,20 @@ import argparse
 import gc
 import json
 import logging
-import random
+import os
 import re
+import sys
 import time
 import unicodedata
 from abc import ABC, abstractmethod
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import fitz  # PyMuPDF
+import pandas as pd
 import pdfplumber
 from pdf2image import convert_from_path
 from PIL import Image
@@ -91,7 +93,6 @@ class PDFExtractorConfig:
     recursive: bool = True
     subject_override: Optional[str] = None
     no_ocr: bool = False
-    force_ocr: bool = False
     dry_run: bool = False
     resume: bool = False
     hf_test_split: float = 0.10
@@ -158,8 +159,6 @@ class ProcessingResult:
     mean_quality_score: float
     processing_time_sec: float
     errors: List[str]
-    raw_chars: int = 0
-    cleaned_chars: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -748,69 +747,58 @@ class PDFProcessor:
             )
 
         # Phase 1 — Batch OCR pages definitively needing it (Type3 / image-only)
-        # --force-ocr: skip all text extraction, OCR every page directly
-        if self.config.force_ocr:
-            log.info(f"    --force-ocr: sending all {num_pages} pages to OCR")
-            ocr_results: Dict[int, str] = {}
-            if self.ocr_strat.available:
-                ocr_results = self.ocr_strat.extract_pages_batch(
-                    pdf_path, list(range(num_pages))
-                )
-            else:
-                log.warning("    --force-ocr requested but tesseract not available")
-            text_candidates: Dict[int, Tuple[str, str, float]] = {}  # unused in this branch
-        else:
-            definite_ocr = [i for i, t in page_types.items()
-                            if t in (PageFontType.TYPE3_CUSTOM, PageFontType.IMAGE_ONLY)]
-            ocr_results = {}
+        definite_ocr = [i for i, t in page_types.items()
+                        if t in (PageFontType.TYPE3_CUSTOM, PageFontType.IMAGE_ONLY)]
+        ocr_results: Dict[int, str] = {}
 
-            if definite_ocr and not self.config.no_ocr and self.ocr_strat.available:
-                log.info(f"    OCR: {len(definite_ocr)}/{num_pages} pages")
-                ocr_results = self.ocr_strat.extract_pages_batch(pdf_path, definite_ocr)
-            elif definite_ocr:
-                reason = "disabled" if self.config.no_ocr else "tesseract not available"
-                log.warning(f"    {len(definite_ocr)} pages need OCR but OCR is {reason}")
+        if definite_ocr and not self.config.no_ocr and self.ocr_strat.available:
+            log.info(f"    Pre-OCR: {len(definite_ocr)}/{num_pages} pages (Type3/image)")
+            ocr_results = self.ocr_strat.extract_pages_batch(pdf_path, definite_ocr)
+        elif definite_ocr:
+            reason = "disabled" if self.config.no_ocr else "tesseract not available"
+            log.warning(f"    {len(definite_ocr)} pages need OCR but OCR is {reason}")
 
-            # Phase 2 — Text extraction for CLEAN / MIXED pages (single pass)
-            text_candidates = {}
-            needs_ocr_fallback = []
+        # Phase 2 — Text extraction for CLEAN / MIXED pages (single pass)
+        # Collect results; mark pages below quality threshold for batch OCR fallback
+        text_candidates: Dict[int, Tuple[str, str, float]] = {}
+        needs_ocr_fallback: List[int] = []
 
-            for page_num in range(num_pages):
-                p_type = page_types[page_num]
-                if page_num in ocr_results:
-                    continue
-                if p_type in (PageFontType.TYPE3_CUSTOM, PageFontType.IMAGE_ONLY):
-                    continue
+        for page_num in range(num_pages):
+            p_type = page_types[page_num]
+            if page_num in ocr_results:
+                continue
+            if p_type in (PageFontType.TYPE3_CUSTOM, PageFontType.IMAGE_ONLY):
+                continue  # OCR was attempted above; skip here
 
-                txt, strategy, quality = "", "unknown", 0.0
+            txt, strategy, quality = "", "unknown", 0.0
+            try:
+                txt = self.pymupdf_strat.extract_page(pdf_path, page_num)
+                quality = self.scorer.score(txt).overall
+                strategy = "pymupdf"
+            except Exception as e:
+                errors.append(f"PyMuPDF p{page_num}: {e}")
+
+            if quality < self.config.quality_threshold:
                 try:
-                    txt = self.pymupdf_strat.extract_page(pdf_path, page_num)
-                    quality = self.scorer.score(txt).overall
-                    strategy = "pymupdf"
+                    txt2 = self.plumber_strat.extract_page(pdf_path, page_num)
+                    q2 = self.scorer.score(txt2).overall
+                    if q2 > quality:
+                        txt, quality, strategy = txt2, q2, "pdfplumber"
                 except Exception as e:
-                    errors.append(f"PyMuPDF p{page_num}: {e}")
+                    errors.append(f"pdfplumber p{page_num}: {e}")
 
-                if quality < self.config.quality_threshold:
-                    try:
-                        txt2 = self.plumber_strat.extract_page(pdf_path, page_num)
-                        q2 = self.scorer.score(txt2).overall
-                        if q2 > quality:
-                            txt, quality, strategy = txt2, q2, "pdfplumber"
-                    except Exception as e:
-                        errors.append(f"pdfplumber p{page_num}: {e}")
+            text_candidates[page_num] = (txt, strategy, quality)
+            if quality < self.config.quality_threshold:
+                needs_ocr_fallback.append(page_num)
 
-                text_candidates[page_num] = (txt, strategy, quality)
-                if quality < self.config.quality_threshold:
-                    needs_ocr_fallback.append(page_num)
-
-            # Phase 3 — Single batch OCR for all text pages that scored below threshold
-            if needs_ocr_fallback and not self.config.no_ocr and self.ocr_strat.available:
-                log.info(f"    OCR fallback: {len(needs_ocr_fallback)} low-quality pages")
-                fallback = self.ocr_strat.extract_pages_batch(pdf_path, needs_ocr_fallback)
-                for page_num, ocr_txt in fallback.items():
-                    q_ocr = self.scorer.score(ocr_txt).overall
-                    if q_ocr > text_candidates[page_num][2]:
-                        text_candidates[page_num] = (ocr_txt, "ocr", q_ocr)
+        # Phase 3 — Single batch OCR for all text pages that scored below threshold
+        if needs_ocr_fallback and not self.config.no_ocr and self.ocr_strat.available:
+            log.info(f"    OCR fallback: {len(needs_ocr_fallback)} low-quality pages")
+            fallback = self.ocr_strat.extract_pages_batch(pdf_path, needs_ocr_fallback)
+            for page_num, ocr_txt in fallback.items():
+                q_ocr = self.scorer.score(ocr_txt).overall
+                if q_ocr > text_candidates[page_num][2]:
+                    text_candidates[page_num] = (ocr_txt, "ocr", q_ocr)
 
         # Phase 4 — Assemble final page results
         page_results: List[PageResult] = []
@@ -848,14 +836,9 @@ class PDFProcessor:
 
         # Header/footer removal then cleaning
         raw_texts = [pr.text for pr in page_results]
-        raw_chars = sum(len(t) for t in raw_texts)
-
         cleaned = self.hf_detector.detect_and_remove(raw_texts)
         for pr, ct in zip(page_results, cleaned):
             pr.text = self.cleaner.clean(ct)
-
-        cleaned_chars = sum(len(pr.text) for pr in page_results)
-        retention_pct = (cleaned_chars / raw_chars * 100) if raw_chars else 0.0
 
         chunks = self.chunker.build_chunks(
             page_results, subject, pdf_path.name, source_path
@@ -866,9 +849,6 @@ class PDFProcessor:
 
         log.info(f"    → {len(chunks)} chunks | quality={mean_q:.2f} | "
                  f"text={max(0, pages_text)} ocr={pages_ocr} failed={pages_failed}")
-        log.info(f"    chars: {raw_chars:,} raw → {cleaned_chars:,} clean "
-                 f"({retention_pct:.1f}% retained)")
-        log.info("")  # blank line between PDFs
 
         return ProcessingResult(
             pdf_path=pdf_path, subject=subject, chunks=chunks,
@@ -877,8 +857,6 @@ class PDFProcessor:
             mean_quality_score=round(mean_q, 4),
             processing_time_sec=round(time.time() - t0, 2),
             errors=errors,
-            raw_chars=raw_chars,
-            cleaned_chars=cleaned_chars,
         )
 
     def _print_dry_run(self, pdf_path: Path, num_pages: int,
@@ -931,8 +909,6 @@ class DatasetWriter:
         subj_dir = output_dir / subject
         subj_dir.mkdir(parents=True, exist_ok=True)
         meta_file = subj_dir / f"{result.pdf_path.stem}_metadata.json"
-        retention_pct = (result.cleaned_chars / result.raw_chars * 100
-                         if result.raw_chars else 0.0)
         meta = {
             "source_file": result.pdf_path.name,
             "subject": result.subject,
@@ -942,9 +918,6 @@ class DatasetWriter:
             "pages_failed": result.pages_failed,
             "chunks_generated": len(result.chunks),
             "mean_quality_score": result.mean_quality_score,
-            "raw_chars": result.raw_chars,
-            "cleaned_chars": result.cleaned_chars,
-            "char_retention_pct": round(retention_pct, 2),
             "processing_time_sec": result.processing_time_sec,
             "errors": result.errors,
         }
@@ -966,6 +939,22 @@ class DatasetWriter:
             "char_count": chunk.char_count,
             "extraction_strategy": chunk.extraction_strategy,
             "quality_score": chunk.quality_score,
+            "language": chunk.language,
+        }
+
+    def _sft_record(self, chunk: Chunk) -> dict:
+        summary = _extractive_summary(chunk.text)
+        sft_text = _SFT_TEMPLATE.format(
+            subject=chunk.subject,
+            text=chunk.text,
+            summary=summary,
+        )
+        return {
+            "id": chunk.chunk_id + "_sft",
+            "text": sft_text,
+            "subject": chunk.subject,
+            "source_file": chunk.source_file,
+            "chunk_index": chunk.chunk_index,
             "language": chunk.language,
         }
 
@@ -1006,8 +995,8 @@ class FolderProcessor:
                          + ", ".join(skipped[:3]) + ("..." if len(skipped) > 3 else ""))
             pdfs = pending
 
-        log.info(f"{'='*60}")
-        log.info(f"EXTRACTING: {subj.upper()}  ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''})")
+        log.info(f"\n{'='*60}")
+        log.info(f"Subject: {subj}  ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''} to process)")
         log.info(f"{'='*60}")
 
         if not pdfs:
@@ -1015,11 +1004,9 @@ class FolderProcessor:
             return []
 
         all_chunks: List[Chunk] = []
-        results: List[ProcessingResult] = []
         for pdf in pdfs:
             result = self.processor.process(pdf, subj, folder)
             all_chunks.extend(result.chunks)
-            results.append(result)
             if not self.config.dry_run:
                 self.writer.write_metadata(result, output_dir, subj)
 
@@ -1028,26 +1015,7 @@ class FolderProcessor:
             self.writer.write_subject(all_chunks, output_dir, subj,
                                       append=self.config.resume)
 
-        # Subject-level summary
-        total_raw = sum(r.raw_chars for r in results)
-        total_clean = sum(r.cleaned_chars for r in results)
-        total_pages = sum(r.pages_total for r in results)
-        total_failed = sum(r.pages_failed for r in results)
-        subj_retention = (total_clean / total_raw * 100) if total_raw else 0.0
-        avg_chunk_len = (sum(len(c.text) for c in all_chunks) // max(1, len(all_chunks)))
-
-        log.info(f"  {'─'*54}")
-        log.info(f"  SUBJECT SUMMARY: {subj}")
-        log.info(f"  {'─'*54}")
-        log.info(f"  PDFs processed : {len(results)}")
-        log.info(f"  Total pages    : {total_pages}  (failed: {total_failed})")
-        log.info(f"  Total chunks   : {len(all_chunks)}")
-        log.info(f"  Avg chunk len  : {avg_chunk_len:,} chars")
-        log.info(f"  Raw chars      : {total_raw:,}")
-        log.info(f"  Clean chars    : {total_clean:,}")
-        log.info(f"  Char retention : {subj_retention:.1f}%")
-        log.info(f"  {'─'*54}")
-
+        log.info(f"Subject '{subj}': {len(all_chunks)} new chunks")
         return all_chunks
 
 
@@ -1088,47 +1056,38 @@ class DatasetMerger:
         combined_dir = output_dir / "combined"
         combined_dir.mkdir(parents=True, exist_ok=True)
 
+        import random
         rng = random.Random(self.config.hf_shuffle_seed)
-        rng.shuffle(all_records)
+        shuffled = all_chunks[:]
+        rng.shuffle(shuffled)
 
         # Stage 1 — pretrain JSONL (plain text, no special tokens)
         pretrain_path = combined_dir / "unified_pretrain.jsonl"
         with open(pretrain_path, 'w', encoding='utf-8') as f:
-            for rec in all_records:
-                f.write(json.dumps(rec, ensure_ascii=False) + '\n')
-        log.info(f"Pretrain JSONL: {pretrain_path}  ({len(all_records)} records)")
+            for chunk in shuffled:
+                f.write(json.dumps(self.writer._pretrain_record(chunk),
+                                   ensure_ascii=False) + '\n')
+        log.info(f"Pretrain JSONL: {pretrain_path}  ({len(shuffled)} records)")
 
         # Stage 2 — SFT JSONL (Gemma 2 chat format)
+        sft_chunks = [c for c in shuffled if c.word_count >= 50]
         sft_path = combined_dir / "unified_sft.jsonl"
-        sft_count = 0
         with open(sft_path, 'w', encoding='utf-8') as f:
-            for rec in all_records:
-                if rec.get("word_count", 0) >= 50:
-                    sft_rec = {
-                        "id": rec["id"] + "_sft",
-                        "text": _SFT_TEMPLATE.format(
-                            subject=rec.get("subject", ""),
-                            text=rec["text"],
-                            summary=_extractive_summary(rec["text"]),
-                        ),
-                        "subject": rec.get("subject", ""),
-                        "source_file": rec.get("source_file", ""),
-                        "chunk_index": rec.get("chunk_index", 0),
-                        "language": rec.get("language", "en"),
-                    }
-                    f.write(json.dumps(sft_rec, ensure_ascii=False) + '\n')
-                    sft_count += 1
-        log.info(f"SFT JSONL:     {sft_path}  ({sft_count} records)")
+            for chunk in sft_chunks:
+                f.write(json.dumps(self.writer._sft_record(chunk),
+                                   ensure_ascii=False) + '\n')
+        log.info(f"SFT JSONL:     {sft_path}  ({len(sft_chunks)} records)")
 
         # HuggingFace Dataset
         if HAS_DATASETS:
-            self._save_hf_dataset(all_records, combined_dir)
+            self._save_hf_dataset(shuffled, combined_dir)
         else:
             log.warning("datasets package not found — skipping HuggingFace Dataset output")
 
-        self._print_summary(all_records, combined_dir)
+        self._print_summary(shuffled, combined_dir)
 
-    def _save_hf_dataset(self, records: List[dict], combined_dir: Path) -> None:
+    def _save_hf_dataset(self, chunks: List[Chunk], combined_dir: Path) -> None:
+        records = [self.writer._pretrain_record(c) for c in chunks]
         ds = Dataset.from_list(records)
         split_idx = int(len(ds) * (1.0 - self.config.hf_test_split))
         dd = DatasetDict({
@@ -1140,15 +1099,15 @@ class DatasetMerger:
         log.info(f"HF Dataset:    {hf_path}  "
                  f"(train={len(dd['train'])}, test={len(dd['test'])})")
 
-    def _print_summary(self, records: List[dict], combined_dir: Path) -> None:
-        by_subject = Counter(r.get("subject", "unknown") for r in records)
-        by_lang = Counter(r.get("language", "en") for r in records)
-        by_strategy = Counter(r.get("extraction_strategy", "unknown") for r in records)
-        mean_q = sum(r.get("quality_score", 0) for r in records) / max(1, len(records))
+    def _print_summary(self, chunks: List[Chunk], combined_dir: Path) -> None:
+        by_subject = Counter(c.subject for c in chunks)
+        by_lang = Counter(c.language for c in chunks)
+        by_strategy = Counter(c.extraction_strategy for c in chunks)
+        mean_q = sum(c.quality_score for c in chunks) / max(1, len(chunks))
 
         summary = {
-            "total_chunks": len(records),
-            "total_words": sum(r.get("word_count", 0) for r in records),
+            "total_chunks": len(chunks),
+            "total_words": sum(c.word_count for c in chunks),
             "mean_quality_score": round(mean_q, 4),
             "by_subject": dict(sorted(by_subject.items())),
             "by_language": dict(sorted(by_lang.items())),
@@ -1199,8 +1158,8 @@ Examples:
   python scripts/pdf_extractor.py upsc_pdfs/Polity/ --no-ocr
         """,
     )
-    p.add_argument("inputs", nargs="*", metavar="input",
-                   help="PDF file(s) or folder(s) (not required with --merge-only)")
+    p.add_argument("inputs", nargs="+", metavar="input",
+                   help="PDF file(s) or folder(s)")
     p.add_argument("--output", default="./dataset_output",
                    help="Output directory (default: ./dataset_output)")
     p.add_argument("--subject",
@@ -1218,16 +1177,10 @@ Examples:
                    help="DPI for PDF→image conversion (default: 300)")
     p.add_argument("--ocr-lang", default="eng+hin",
                    help="Tesseract language string (default: eng+hin)")
-    p.add_argument("--force-ocr", action="store_true",
-                   help="Force OCR on every page, bypassing quality scoring (use for PDFs with character-substitution corruption that scores as clean)")
     p.add_argument("--no-ocr", action="store_true",
                    help="Disable OCR — fast but Type3/scanned PDFs are skipped")
     p.add_argument("--no-merge", action="store_true",
                    help="Skip creating unified combined dataset")
-    p.add_argument("--merge-only", action="store_true",
-                   help="Skip all PDF extraction; just merge existing subject JSONLs into unified files")
-    p.add_argument("--resume", action="store_true",
-                   help="Skip PDFs that already have a metadata file (safe restart)")
     p.add_argument("--dry-run", action="store_true",
                    help="Classify pages and show OCR plan, do not extract")
     p.add_argument("--log-level", default="INFO",
@@ -1248,9 +1201,7 @@ def main() -> None:
         ocr_dpi=args.ocr_dpi,
         ocr_language=args.ocr_lang,
         no_ocr=args.no_ocr,
-        force_ocr=args.force_ocr,
         dry_run=args.dry_run,
-        resume=args.resume,
         recursive=args.recursive,
         subject_override=args.subject,
         output_dir=args.output,
@@ -1264,17 +1215,7 @@ def main() -> None:
     writer = DatasetWriter()
     proc = PDFProcessor(config)
 
-    if not args.inputs and not args.merge_only:
-        parser.error("at least one input path is required (or use --merge-only)")
-
     all_chunks: List[Chunk] = []
-
-    if args.merge_only:
-        # Skip extraction entirely — just merge whatever subject JSONLs already exist
-        log.info("--merge-only: skipping extraction, merging existing subject JSONLs...")
-        merger.merge([], output_dir)
-        log.info("Done.")
-        return
 
     for inp in args.inputs:
         inp_path = Path(inp)
@@ -1287,11 +1228,7 @@ def main() -> None:
             result = proc.process(inp_path, subject)
             all_chunks.extend(result.chunks)
             if not config.dry_run:
-                # Append to existing subject JSONL so other PDFs in the same
-                # subject are not overwritten when processing a single file
-                existing_jsonl = output_dir / subject / f"{subject}_chunks.jsonl"
-                writer.write_subject(result.chunks, output_dir, subject,
-                                     append=existing_jsonl.exists())
+                writer.write_subject(result.chunks, output_dir, subject)
                 writer.write_metadata(result, output_dir, subject)
 
         elif inp_path.is_dir():
