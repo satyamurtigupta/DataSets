@@ -868,6 +868,7 @@ class PDFProcessor:
                  f"text={max(0, pages_text)} ocr={pages_ocr} failed={pages_failed}")
         log.info(f"    chars: {raw_chars:,} raw → {cleaned_chars:,} clean "
                  f"({retention_pct:.1f}% retained)")
+        log.info("")  # blank line between PDFs
 
         return ProcessingResult(
             pdf_path=pdf_path, subject=subject, chunks=chunks,
