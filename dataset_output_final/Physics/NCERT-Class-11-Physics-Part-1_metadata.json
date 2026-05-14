@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-11-Physics-Part-1.pdf",
+  "subject": "Physics",
+  "pages_total": 234,
+  "pages_text": 18,
+  "pages_ocr": 216,
+  "pages_failed": 0,
+  "chunks_generated": 475,
+  "mean_quality_score": 0.9983,
+  "raw_chars": 620230,
+  "cleaned_chars": 618135,
+  "char_retention_pct": 99.66,
+  "processing_time_sec": 509.06,
+  "errors": []
+}

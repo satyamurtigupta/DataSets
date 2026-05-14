@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-10-Science-Exemplar-Problems-1.pdf",
+  "subject": "Science",
+  "pages_total": 223,
+  "pages_text": 222,
+  "pages_ocr": 1,
+  "pages_failed": 0,
+  "chunks_generated": 376,
+  "mean_quality_score": 0.9683,
+  "raw_chars": 295036,
+  "cleaned_chars": 291853,
+  "char_retention_pct": 98.92,
+  "processing_time_sec": 2.88,
+  "errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-11-Heritage-Crafts.pdf",
+  "subject": "Art",
+  "pages_total": 125,
+  "pages_text": 125,
+  "pages_ocr": 0,
+  "pages_failed": 0,
+  "chunks_generated": 137,
+  "mean_quality_score": 0.9973,
+  "raw_chars": 205520,
+  "cleaned_chars": 202919,
+  "char_retention_pct": 98.73,
+  "processing_time_sec": 0.92,
+  "errors": []
+}

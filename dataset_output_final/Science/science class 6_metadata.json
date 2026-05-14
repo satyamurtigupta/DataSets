@@ -1,0 +1,15 @@
+{
+  "source_file": "science class 6.pdf",
+  "subject": "Science",
+  "pages_total": 176,
+  "pages_text": 174,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 248,
+  "mean_quality_score": 0.9937,
+  "raw_chars": 318896,
+  "cleaned_chars": 316477,
+  "char_retention_pct": 99.24,
+  "processing_time_sec": 68.43,
+  "errors": []
+}

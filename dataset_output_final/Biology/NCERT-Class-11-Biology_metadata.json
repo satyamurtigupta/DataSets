@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-11-Biology.pdf",
+  "subject": "Biology",
+  "pages_total": 345,
+  "pages_text": 0,
+  "pages_ocr": 345,
+  "pages_failed": 0,
+  "chunks_generated": 439,
+  "mean_quality_score": 0.9996,
+  "raw_chars": 676296,
+  "cleaned_chars": 674580,
+  "char_retention_pct": 99.75,
+  "processing_time_sec": 516.09,
+  "errors": []
+}

@@ -1,0 +1,12 @@
+{
+  "source_file": "NCERT-Class-11-History.pdf",
+  "subject": "History",
+  "pages_total": 260,
+  "pages_text": 36,
+  "pages_ocr": 224,
+  "pages_failed": 0,
+  "chunks_generated": 317,
+  "mean_quality_score": 0.972,
+  "processing_time_sec": 440.23,
+  "errors": []
+}

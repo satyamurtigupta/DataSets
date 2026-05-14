@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-12-Economics-Part-2.pdf",
+  "subject": "Economics",
+  "pages_total": 106,
+  "pages_text": 0,
+  "pages_ocr": 106,
+  "pages_failed": 0,
+  "chunks_generated": 177,
+  "mean_quality_score": 0.9983,
+  "raw_chars": 301790,
+  "cleaned_chars": 299693,
+  "char_retention_pct": 99.31,
+  "processing_time_sec": 228.72,
+  "errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "source_file": "Copy of science class 7.pdf",
+  "subject": "Science",
+  "pages_total": 248,
+  "pages_text": 246,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 335,
+  "mean_quality_score": 0.9967,
+  "raw_chars": 404294,
+  "cleaned_chars": 400600,
+  "char_retention_pct": 99.09,
+  "processing_time_sec": 89.13,
+  "errors": []
+}

@@ -1,0 +1,26 @@
+{
+  "total_chunks": 28595,
+  "total_words": 505789,
+  "mean_quality_score": 0.068,
+  "by_subject": {
+    "Art": 1092,
+    "Biology": 1842,
+    "Chemistry": 1196,
+    "Economics": 1983,
+    "Geography": 4388,
+    "History": 1974,
+    "Physics": 4015,
+    "Polity": 4780,
+    "Science": 5865,
+    "Sociology": 1460
+  },
+  "by_language": {
+    "en": 28594,
+    "id": 1
+  },
+  "by_strategy": {
+    "ocr": 603,
+    "pymupdf": 1371,
+    "unknown": 26621
+  }
+}

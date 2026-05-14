@@ -1,0 +1,15 @@
+{
+  "source_file": "social science class 8.pdf",
+  "subject": "Geography",
+  "pages_total": 84,
+  "pages_text": 81,
+  "pages_ocr": 3,
+  "pages_failed": 0,
+  "chunks_generated": 91,
+  "mean_quality_score": 0.9973,
+  "raw_chars": 138179,
+  "cleaned_chars": 136226,
+  "char_retention_pct": 98.59,
+  "processing_time_sec": 53.5,
+  "errors": []
+}

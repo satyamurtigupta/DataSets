@@ -1,0 +1,15 @@
+{
+  "source_file": "[Hindi (auto-generated)] How Did They Track Khamenei [DownSub.com].pdf",
+  "subject": "Economics",
+  "pages_total": 93,
+  "pages_text": 93,
+  "pages_ocr": 0,
+  "pages_failed": 0,
+  "chunks_generated": 162,
+  "mean_quality_score": 0.9914,
+  "raw_chars": 194660,
+  "cleaned_chars": 193579,
+  "char_retention_pct": 99.44,
+  "processing_time_sec": 2.09,
+  "errors": []
+}

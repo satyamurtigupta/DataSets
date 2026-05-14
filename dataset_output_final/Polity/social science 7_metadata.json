@@ -1,0 +1,15 @@
+{
+  "source_file": "social science 7.pdf",
+  "subject": "Polity",
+  "pages_total": 124,
+  "pages_text": 123,
+  "pages_ocr": 1,
+  "pages_failed": 0,
+  "chunks_generated": 132,
+  "mean_quality_score": 0.9923,
+  "raw_chars": 190566,
+  "cleaned_chars": 190035,
+  "char_retention_pct": 99.72,
+  "processing_time_sec": 3.03,
+  "errors": []
+}

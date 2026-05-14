@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-12-Physics-Part-2.pdf",
+  "subject": "Physics",
+  "pages_total": 254,
+  "pages_text": 254,
+  "pages_ocr": 0,
+  "pages_failed": 0,
+  "chunks_generated": 451,
+  "mean_quality_score": 0.977,
+  "raw_chars": 593832,
+  "cleaned_chars": 583698,
+  "char_retention_pct": 98.29,
+  "processing_time_sec": 5.55,
+  "errors": []
+}

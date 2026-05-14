@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-10-History.pdf",
+  "subject": "History",
+  "pages_total": 196,
+  "pages_text": 195,
+  "pages_ocr": 1,
+  "pages_failed": 0,
+  "chunks_generated": 284,
+  "mean_quality_score": 0.9993,
+  "raw_chars": 428737,
+  "cleaned_chars": 423985,
+  "char_retention_pct": 98.89,
+  "processing_time_sec": 2.92,
+  "errors": []
+}

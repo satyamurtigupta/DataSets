@@ -1,0 +1,15 @@
+{
+  "source_file": "Geography.pdf",
+  "subject": "Geography",
+  "pages_total": 69,
+  "pages_text": 68,
+  "pages_ocr": 1,
+  "pages_failed": 0,
+  "chunks_generated": 88,
+  "mean_quality_score": 0.9991,
+  "raw_chars": 93815,
+  "cleaned_chars": 92678,
+  "char_retention_pct": 98.79,
+  "processing_time_sec": 4.53,
+  "errors": []
+}

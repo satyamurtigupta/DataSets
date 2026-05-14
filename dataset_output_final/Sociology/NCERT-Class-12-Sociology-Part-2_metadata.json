@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-12-Sociology-Part-2.pdf",
+  "subject": "Sociology",
+  "pages_total": 165,
+  "pages_text": 164,
+  "pages_ocr": 1,
+  "pages_failed": 0,
+  "chunks_generated": 244,
+  "mean_quality_score": 0.997,
+  "raw_chars": 374181,
+  "cleaned_chars": 370516,
+  "char_retention_pct": 99.02,
+  "processing_time_sec": 3.32,
+  "errors": []
+}

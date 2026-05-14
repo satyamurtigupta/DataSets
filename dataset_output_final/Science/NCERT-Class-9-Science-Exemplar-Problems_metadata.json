@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-9-Science-Exemplar-Problems.pdf",
+  "subject": "Science",
+  "pages_total": 192,
+  "pages_text": 13,
+  "pages_ocr": 179,
+  "pages_failed": 0,
+  "chunks_generated": 245,
+  "mean_quality_score": 0.9883,
+  "raw_chars": 249652,
+  "cleaned_chars": 248640,
+  "char_retention_pct": 99.59,
+  "processing_time_sec": 255.87,
+  "errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "source_file": "Class_XII_Heritage_Craft_-_Craft_Traditions_of_India.pdf",
+  "subject": "Art",
+  "pages_total": 133,
+  "pages_text": 121,
+  "pages_ocr": 12,
+  "pages_failed": 0,
+  "chunks_generated": 179,
+  "mean_quality_score": 0.9826,
+  "raw_chars": 202268,
+  "cleaned_chars": 201556,
+  "char_retention_pct": 99.65,
+  "processing_time_sec": 29.22,
+  "errors": []
+}

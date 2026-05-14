@@ -94,6 +94,7 @@ class PDFExtractorConfig:
     subject_override: Optional[str] = None
     no_ocr: bool = False
     dry_run: bool = False
+    resume: bool = False
     hf_test_split: float = 0.10
     hf_shuffle_seed: int = 42
 
@@ -892,14 +893,16 @@ def _extractive_summary(text: str, n: int = 3) -> str:
 
 class DatasetWriter:
     def write_subject(self, chunks: List[Chunk], output_dir: Path,
-                      subject: str) -> None:
+                      subject: str, append: bool = False) -> None:
         subj_dir = output_dir / subject
         subj_dir.mkdir(parents=True, exist_ok=True)
         out = subj_dir / f"{subject}_chunks.jsonl"
-        with open(out, 'w', encoding='utf-8') as f:
+        mode = 'a' if append and out.exists() else 'w'
+        with open(out, mode, encoding='utf-8') as f:
             for chunk in chunks:
                 f.write(json.dumps(self._pretrain_record(chunk), ensure_ascii=False) + '\n')
-        log.info(f"    Saved {len(chunks)} chunks → {out}")
+        action = "Appended" if mode == 'a' else "Saved"
+        log.info(f"    {action} {len(chunks)} chunks → {out}")
 
     def write_metadata(self, result: ProcessingResult, output_dir: Path,
                        subject: str) -> None:
@@ -976,9 +979,29 @@ class FolderProcessor:
             log.warning(f"No PDFs found in {folder}")
             return []
 
+        subj_dir = output_dir / subj
+
+        # Resume: filter out already-processed PDFs
+        if self.config.resume:
+            pending, skipped = [], []
+            for pdf in pdfs:
+                meta_file = subj_dir / f"{pdf.stem}_metadata.json"
+                if meta_file.exists():
+                    skipped.append(pdf.name)
+                else:
+                    pending.append(pdf)
+            if skipped:
+                log.info(f"  [resume] Skipping {len(skipped)} already done: "
+                         + ", ".join(skipped[:3]) + ("..." if len(skipped) > 3 else ""))
+            pdfs = pending
+
         log.info(f"\n{'='*60}")
-        log.info(f"Subject: {subj}  ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''})")
+        log.info(f"Subject: {subj}  ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''} to process)")
         log.info(f"{'='*60}")
+
+        if not pdfs:
+            log.info(f"  All PDFs already processed — skipping subject '{subj}'")
+            return []
 
         all_chunks: List[Chunk] = []
         for pdf in pdfs:
@@ -988,9 +1011,11 @@ class FolderProcessor:
                 self.writer.write_metadata(result, output_dir, subj)
 
         if all_chunks and not self.config.dry_run:
-            self.writer.write_subject(all_chunks, output_dir, subj)
+            # Append to existing JSONL if resuming, otherwise overwrite
+            self.writer.write_subject(all_chunks, output_dir, subj,
+                                      append=self.config.resume)
 
-        log.info(f"Subject '{subj}': {len(all_chunks)} total chunks")
+        log.info(f"Subject '{subj}': {len(all_chunks)} new chunks")
         return all_chunks
 
 
@@ -1004,7 +1029,27 @@ class DatasetMerger:
         self.writer = DatasetWriter()
 
     def merge(self, all_chunks: List[Chunk], output_dir: Path) -> None:
-        if not all_chunks:
+        # When resuming, also load chunks from already-processed subject JSONLs
+        existing_records: List[dict] = []
+        for jsonl_file in sorted(output_dir.glob("*/*_chunks.jsonl")):
+            if jsonl_file.parent.name == "combined":
+                continue
+            try:
+                with open(jsonl_file, encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            existing_records.append(json.loads(line))
+            except Exception as e:
+                log.warning(f"Could not read {jsonl_file}: {e}")
+
+        # Merge: existing records from disk + new chunks from this run
+        new_ids = {c.chunk_id for c in all_chunks}
+        deduped_existing = [r for r in existing_records if r.get("id") not in new_ids]
+        new_records = [self.writer._pretrain_record(c) for c in all_chunks]
+        all_records = deduped_existing + new_records
+
+        if not all_records:
             log.warning("No chunks to merge.")
             return
 

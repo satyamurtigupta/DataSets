@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-11-Political-Science-Part-2-1.pdf",
+  "subject": "Polity",
+  "pages_total": 160,
+  "pages_text": 2,
+  "pages_ocr": 158,
+  "pages_failed": 0,
+  "chunks_generated": 180,
+  "mean_quality_score": 0.9902,
+  "raw_chars": 302291,
+  "cleaned_chars": 297895,
+  "char_retention_pct": 98.55,
+  "processing_time_sec": 233.75,
+  "errors": []
+}
