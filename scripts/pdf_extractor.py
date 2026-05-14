@@ -765,7 +765,7 @@ class PDFProcessor:
             ocr_results = {}
 
             if definite_ocr and not self.config.no_ocr and self.ocr_strat.available:
-                log.info(f"    Pre-OCR: {len(definite_ocr)}/{num_pages} pages (Type3/image)")
+                log.info(f"    OCR: {len(definite_ocr)}/{num_pages} pages")
                 ocr_results = self.ocr_strat.extract_pages_batch(pdf_path, definite_ocr)
             elif definite_ocr:
                 reason = "disabled" if self.config.no_ocr else "tesseract not available"
@@ -1005,7 +1005,7 @@ class FolderProcessor:
                          + ", ".join(skipped[:3]) + ("..." if len(skipped) > 3 else ""))
             pdfs = pending
 
-        log.info(f"\n{'='*60}")
+        log.info(f"{'='*60}")
         log.info(f"EXTRACTING: {subj.upper()}  ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''})")
         log.info(f"{'='*60}")
 
@@ -1035,7 +1035,7 @@ class FolderProcessor:
         subj_retention = (total_clean / total_raw * 100) if total_raw else 0.0
         avg_chunk_len = (sum(len(c.text) for c in all_chunks) // max(1, len(all_chunks)))
 
-        log.info(f"\n  {'─'*54}")
+        log.info(f"  {'─'*54}")
         log.info(f"  SUBJECT SUMMARY: {subj}")
         log.info(f"  {'─'*54}")
         log.info(f"  PDFs processed : {len(results)}")
@@ -1045,7 +1045,7 @@ class FolderProcessor:
         log.info(f"  Raw chars      : {total_raw:,}")
         log.info(f"  Clean chars    : {total_clean:,}")
         log.info(f"  Char retention : {subj_retention:.1f}%")
-        log.info(f"  {'─'*54}\n")
+        log.info(f"  {'─'*54}")
 
         return all_chunks
 
