@@ -745,39 +745,30 @@ class PDFProcessor:
                 mean_quality_score=0.0, processing_time_sec=time.time() - t0, errors=[],
             )
 
-        # Batch OCR pages that need it
-        ocr_needed = [i for i, t in page_types.items()
-                      if t in (PageFontType.TYPE3_CUSTOM, PageFontType.IMAGE_ONLY)]
+        # Phase 1 — Batch OCR pages definitively needing it (Type3 / image-only)
+        definite_ocr = [i for i, t in page_types.items()
+                        if t in (PageFontType.TYPE3_CUSTOM, PageFontType.IMAGE_ONLY)]
         ocr_results: Dict[int, str] = {}
 
-        if ocr_needed and not self.config.no_ocr and self.ocr_strat.available:
-            log.info(f"    OCR: {len(ocr_needed)}/{num_pages} pages")
-            ocr_results = self.ocr_strat.extract_pages_batch(pdf_path, ocr_needed)
-        elif ocr_needed:
+        if definite_ocr and not self.config.no_ocr and self.ocr_strat.available:
+            log.info(f"    Pre-OCR: {len(definite_ocr)}/{num_pages} pages (Type3/image)")
+            ocr_results = self.ocr_strat.extract_pages_batch(pdf_path, definite_ocr)
+        elif definite_ocr:
             reason = "disabled" if self.config.no_ocr else "tesseract not available"
-            log.warning(f"    {len(ocr_needed)} pages need OCR but OCR is {reason}")
+            log.warning(f"    {len(definite_ocr)} pages need OCR but OCR is {reason}")
 
-        # Extract each page
-        page_results: List[PageResult] = []
-        pages_text = pages_ocr = pages_failed = 0
+        # Phase 2 — Text extraction for CLEAN / MIXED pages (single pass)
+        # Collect results; mark pages below quality threshold for batch OCR fallback
+        text_candidates: Dict[int, Tuple[str, str, float]] = {}
+        needs_ocr_fallback: List[int] = []
 
         for page_num in range(num_pages):
             p_type = page_types[page_num]
-
-            # Already have OCR result
             if page_num in ocr_results:
-                txt = ocr_results[page_num]
-                q = self.scorer.score(txt).overall
-                page_results.append(PageResult(page_num, txt, "ocr", q, p_type))
-                pages_ocr += 1
                 continue
-
-            # Type3/image with no OCR result → skip
             if p_type in (PageFontType.TYPE3_CUSTOM, PageFontType.IMAGE_ONLY):
-                pages_failed += 1
-                continue
+                continue  # OCR was attempted above; skip here
 
-            # Try PyMuPDF
             txt, strategy, quality = "", "unknown", 0.0
             try:
                 txt = self.pymupdf_strat.extract_page(pdf_path, page_num)
@@ -786,7 +777,6 @@ class PDFProcessor:
             except Exception as e:
                 errors.append(f"PyMuPDF p{page_num}: {e}")
 
-            # Fallback to pdfplumber
             if quality < self.config.quality_threshold:
                 try:
                     txt2 = self.plumber_strat.extract_page(pdf_path, page_num)
@@ -796,24 +786,41 @@ class PDFProcessor:
                 except Exception as e:
                     errors.append(f"pdfplumber p{page_num}: {e}")
 
-            # Fallback to per-page OCR
-            if (quality < self.config.quality_threshold
-                    and not self.config.no_ocr
-                    and self.ocr_strat.available):
-                try:
-                    batch = self.ocr_strat.extract_pages_batch(pdf_path, [page_num])
-                    txt3 = batch.get(page_num, "")
-                    q3 = self.scorer.score(txt3).overall
-                    if q3 > quality:
-                        txt, quality, strategy = txt3, q3, "ocr"
-                        pages_ocr += 1
-                        pages_text -= 1  # compensate below
-                except Exception as e:
-                    errors.append(f"OCR fallback p{page_num}: {e}")
+            text_candidates[page_num] = (txt, strategy, quality)
+            if quality < self.config.quality_threshold:
+                needs_ocr_fallback.append(page_num)
 
-            if txt.strip():
-                page_results.append(PageResult(page_num, txt, strategy, quality, p_type))
-                pages_text += 1
+        # Phase 3 — Single batch OCR for all text pages that scored below threshold
+        if needs_ocr_fallback and not self.config.no_ocr and self.ocr_strat.available:
+            log.info(f"    OCR fallback: {len(needs_ocr_fallback)} low-quality pages")
+            fallback = self.ocr_strat.extract_pages_batch(pdf_path, needs_ocr_fallback)
+            for page_num, ocr_txt in fallback.items():
+                q_ocr = self.scorer.score(ocr_txt).overall
+                if q_ocr > text_candidates[page_num][2]:
+                    text_candidates[page_num] = (ocr_txt, "ocr", q_ocr)
+
+        # Phase 4 — Assemble final page results
+        page_results: List[PageResult] = []
+        pages_text = pages_ocr = pages_failed = 0
+
+        for page_num in range(num_pages):
+            p_type = page_types[page_num]
+
+            if page_num in ocr_results:
+                txt = ocr_results[page_num]
+                q = self.scorer.score(txt).overall
+                page_results.append(PageResult(page_num, txt, "ocr", q, p_type))
+                pages_ocr += 1
+            elif page_num in text_candidates:
+                txt, strategy, quality = text_candidates[page_num]
+                if txt.strip():
+                    page_results.append(PageResult(page_num, txt, strategy, quality, p_type))
+                    if strategy == "ocr":
+                        pages_ocr += 1
+                    else:
+                        pages_text += 1
+                else:
+                    pages_failed += 1
             else:
                 pages_failed += 1
 
