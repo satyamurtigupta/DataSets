@@ -1,0 +1,12 @@
+{
+  "subject": "Biology",
+  "total_chunks": 1842,
+  "average_chunk_length": 785.8528773072748,
+  "min_chunk_length": 5,
+  "max_chunk_length": 1158257,
+  "median_chunk_length": 125,
+  "chunks_by_source": {
+    "NCERT-Class-12-Biology.pdf": 1841,
+    "NCERT-Class-11-Biology.pdf": 1
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "subject": "Geography",
+  "total_chunks": 4388,
+  "average_chunk_length": 657.1788969917958,
+  "min_chunk_length": 10,
+  "max_chunk_length": 201756,
+  "median_chunk_length": 440,
+  "chunks_by_source": {
+    "Fundamental of Physical Geography (Class XI) 2.pdf": 638,
+    "Prelims PYQ (2011-2025).pdf": 638,
+    "India Physical Environment (Class XI) 2.pdf": 313,
+    "India People and Economy (Class XII).pdf": 593,
+    "NCERT-Class-10-Geography.pdf": 100,
+    "NCERT-Class-9-Geography-1.pdf": 2,
+    "Geography.pdf": 263,
+    "Practical Work in Geography Part 2.pdf": 294,
+    "social science class 8.pdf": 340,
+    "Practical Work in Geography Part 1.pdf": 331,
+    "Fundamentals of Human Geography (Class XII) 1.pdf": 477,
+    "Copy of our environmemnt class 7 - Copy.pdf": 399
+  }
+}

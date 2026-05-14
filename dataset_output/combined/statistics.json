@@ -1,0 +1,176 @@
+{
+  "total_chunks": 31384,
+  "subjects": {
+    "Sociology": {
+      "subject": "Sociology",
+      "total_chunks": 1460,
+      "average_chunk_length": 1257.0424657534247,
+      "min_chunk_length": 18,
+      "max_chunk_length": 711345,
+      "median_chunk_length": 500,
+      "chunks_by_source": {
+        "NCERT-Class-11-Sociology-Part-2.pdf": 2,
+        "NCERT-Class-11-Sociology-Part-1 (1).pdf": 446,
+        "NCERT-Class-12-Sociology-Part-1.pdf": 1,
+        "NCERT-Class-12-Sociology-Part-2.pdf": 1011
+      }
+    },
+    "Art": {
+      "subject": "Art",
+      "total_chunks": 1092,
+      "average_chunk_length": 590.4331501831501,
+      "min_chunk_length": 21,
+      "max_chunk_length": 3002,
+      "median_chunk_length": 564,
+      "chunks_by_source": {
+        "Introduction to Indian Art  _.pdf": 369,
+        "NCERT-Class-11-Heritage-Crafts.pdf": 428,
+        "Class_XII_Heritage_Craft_-_Craft_Traditions_of_India.pdf": 295
+      }
+    },
+    "Polity": {
+      "subject": "Polity",
+      "total_chunks": 4780,
+      "average_chunk_length": 652.1324267782427,
+      "min_chunk_length": 9,
+      "max_chunk_length": 547715,
+      "median_chunk_length": 505,
+      "chunks_by_source": {
+        "NCERT-Class-11-Political-Science-Part-1.pdf": 802,
+        "NCERT-Class-12-Political-Science-Part-2.pdf": 781,
+        "NCERT-Class-12-Political-Science-Part-1.pdf": 714,
+        "NCERT-Class-10-Political-Science.pdf": 472,
+        "social science 7.pdf": 453,
+        "social science demo part 1.pdf": 598,
+        "Polity6.pdf": 443,
+        "NCERT-Class-11-Political-Science-Part-2-1.pdf": 18,
+        "SOCIAL SCIENCE AND POLITICAL LIFE PART 3.pdf": 499
+      }
+    },
+    "Chemistry": {
+      "subject": "Chemistry",
+      "total_chunks": 1196,
+      "average_chunk_length": 2665.8954849498327,
+      "min_chunk_length": 15,
+      "max_chunk_length": 733000,
+      "median_chunk_length": 388,
+      "chunks_by_source": {
+        "NCERT-Class-11-Chemistry-Part-2.pdf": 1,
+        "NCERT-Class-11-Chemistry-Part-1.pdf": 190,
+        "NCERT-Class-12-Chemistry-Part-1.pdf": 238,
+        "NCERT-Class-12-Chemistry-Part-2.pdf": 767
+      }
+    },
+    "Science": {
+      "subject": "Science",
+      "total_chunks": 5865,
+      "average_chunk_length": 593.449957374254,
+      "min_chunk_length": 7,
+      "max_chunk_length": 1022324,
+      "median_chunk_length": 327,
+      "chunks_by_source": {
+        "NCERT-Class-10-Science-Exemplar-Problems-1.pdf": 743,
+        "science class 8.pdf": 1444,
+        "NCERT-Class-9-Science-Exemplar-Problems.pdf": 52,
+        "NCERT-Class-10-Science.pdf": 1,
+        "Copy of science class 7.pdf": 1317,
+        "science class 6.pdf": 884,
+        "class 9 science.pdf": 1424
+      }
+    },
+    "History": {
+      "subject": "History",
+      "total_chunks": 4763,
+      "average_chunk_length": 810.3229057316817,
+      "min_chunk_length": 21,
+      "max_chunk_length": 32700,
+      "median_chunk_length": 495,
+      "chunks_by_source": {
+        "NCERT-Class-10-History.pdf": 865,
+        "class 9 abc.pdf": 894,
+        "NCERT-Class-12-History-Part-3.pdf": 227,
+        "NCERT-Class-12-History-Part-2.pdf": 667,
+        "NCERT-Class-12-History-Part-1 (1).pdf": 539,
+        "History6.pdf": 478,
+        "Copy of our past class 7 social science.pdf": 563,
+        "NCERT-Class-11-History.pdf": 168,
+        "OUR PAST PART 2 CLASS 8 SOCIAL SCIENCE.pdf": 362
+      }
+    },
+    "Economics": {
+      "subject": "Economics",
+      "total_chunks": 1983,
+      "average_chunk_length": 749.40494200706,
+      "min_chunk_length": 7,
+      "max_chunk_length": 167613,
+      "median_chunk_length": 459,
+      "chunks_by_source": {
+        "NCERT-Class-12-Economics-Part-1.pdf": 602,
+        "NCERT-Class-12-Economics-Part-2.pdf": 8,
+        "NCERT-Class-10-Economics.pdf": 565,
+        "[Hindi (auto-generated)] How Did They Track Khamenei [DownSub.com].pdf": 565,
+        "economics class 9.pdf": 243
+      }
+    },
+    "Physics": {
+      "subject": "Physics",
+      "total_chunks": 4015,
+      "average_chunk_length": 789.5803237858032,
+      "min_chunk_length": 12,
+      "max_chunk_length": 430912,
+      "median_chunk_length": 356,
+      "chunks_by_source": {
+        "NCERT-Class-12-Physics-Part-2.pdf": 1791,
+        "NCERT-Class-12-Physics-Part-1.pdf": 2086,
+        "NCERT-Class-11-Physics-Part-1.pdf": 130,
+        "NCERT-Class-11-Physics-Part-2.pdf": 8
+      }
+    },
+    "Geography": {
+      "subject": "Geography",
+      "total_chunks": 4388,
+      "average_chunk_length": 657.1788969917958,
+      "min_chunk_length": 10,
+      "max_chunk_length": 201756,
+      "median_chunk_length": 440,
+      "chunks_by_source": {
+        "Fundamental of Physical Geography (Class XI) 2.pdf": 638,
+        "Prelims PYQ (2011-2025).pdf": 638,
+        "India Physical Environment (Class XI) 2.pdf": 313,
+        "India People and Economy (Class XII).pdf": 593,
+        "NCERT-Class-10-Geography.pdf": 100,
+        "NCERT-Class-9-Geography-1.pdf": 2,
+        "Geography.pdf": 263,
+        "Practical Work in Geography Part 2.pdf": 294,
+        "social science class 8.pdf": 340,
+        "Practical Work in Geography Part 1.pdf": 331,
+        "Fundamentals of Human Geography (Class XII) 1.pdf": 477,
+        "Copy of our environmemnt class 7 - Copy.pdf": 399
+      }
+    },
+    "Biology": {
+      "subject": "Biology",
+      "total_chunks": 1842,
+      "average_chunk_length": 785.8528773072748,
+      "min_chunk_length": 5,
+      "max_chunk_length": 1158257,
+      "median_chunk_length": 125,
+      "chunks_by_source": {
+        "NCERT-Class-12-Biology.pdf": 1841,
+        "NCERT-Class-11-Biology.pdf": 1
+      }
+    }
+  },
+  "total_by_subject": {
+    "Sociology": 1460,
+    "Art": 1092,
+    "Polity": 4780,
+    "Chemistry": 1196,
+    "Science": 5865,
+    "History": 4763,
+    "Economics": 1983,
+    "Physics": 4015,
+    "Geography": 4388,
+    "Biology": 1842
+  }
+}

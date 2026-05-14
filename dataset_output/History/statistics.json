@@ -1,0 +1,19 @@
+{
+  "subject": "History",
+  "total_chunks": 4763,
+  "average_chunk_length": 810.3229057316817,
+  "min_chunk_length": 21,
+  "max_chunk_length": 32700,
+  "median_chunk_length": 495,
+  "chunks_by_source": {
+    "NCERT-Class-10-History.pdf": 865,
+    "class 9 abc.pdf": 894,
+    "NCERT-Class-12-History-Part-3.pdf": 227,
+    "NCERT-Class-12-History-Part-2.pdf": 667,
+    "NCERT-Class-12-History-Part-1 (1).pdf": 539,
+    "History6.pdf": 478,
+    "Copy of our past class 7 social science.pdf": 563,
+    "NCERT-Class-11-History.pdf": 168,
+    "OUR PAST PART 2 CLASS 8 SOCIAL SCIENCE.pdf": 362
+  }
+}

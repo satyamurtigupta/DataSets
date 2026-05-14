@@ -1,0 +1,15 @@
+{
+  "subject": "Economics",
+  "total_chunks": 1983,
+  "average_chunk_length": 749.40494200706,
+  "min_chunk_length": 7,
+  "max_chunk_length": 167613,
+  "median_chunk_length": 459,
+  "chunks_by_source": {
+    "NCERT-Class-12-Economics-Part-1.pdf": 602,
+    "NCERT-Class-12-Economics-Part-2.pdf": 8,
+    "NCERT-Class-10-Economics.pdf": 565,
+    "[Hindi (auto-generated)] How Did They Track Khamenei [DownSub.com].pdf": 565,
+    "economics class 9.pdf": 243
+  }
+}

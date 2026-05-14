@@ -1,0 +1,14 @@
+{
+  "subject": "Chemistry",
+  "total_chunks": 1196,
+  "average_chunk_length": 2665.8954849498327,
+  "min_chunk_length": 15,
+  "max_chunk_length": 733000,
+  "median_chunk_length": 388,
+  "chunks_by_source": {
+    "NCERT-Class-11-Chemistry-Part-2.pdf": 1,
+    "NCERT-Class-11-Chemistry-Part-1.pdf": 190,
+    "NCERT-Class-12-Chemistry-Part-1.pdf": 238,
+    "NCERT-Class-12-Chemistry-Part-2.pdf": 767
+  }
+}

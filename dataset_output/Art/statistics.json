@@ -1,0 +1,13 @@
+{
+  "subject": "Art",
+  "total_chunks": 1092,
+  "average_chunk_length": 590.4331501831501,
+  "min_chunk_length": 21,
+  "max_chunk_length": 3002,
+  "median_chunk_length": 564,
+  "chunks_by_source": {
+    "Introduction to Indian Art  _.pdf": 369,
+    "NCERT-Class-11-Heritage-Crafts.pdf": 428,
+    "Class_XII_Heritage_Craft_-_Craft_Traditions_of_India.pdf": 295
+  }
+}

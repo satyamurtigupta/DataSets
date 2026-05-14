@@ -1,0 +1,597 @@
+Detected subjects: ['Sociology', 'Art', 'Polity', 'Chemistry', 'Science', 'History', 'Economics', 'Physics', 'Geography', 'Biology']
+
+╔====================================================================╗
+║                                                                    ║
+║  SUBJECT-WISE PDF EXTRACTION FOR UPSC SLM                        ║
+║                                                                    ║
+╚====================================================================╝
+
+======================================================================
+EXTRACTING: SOCIOLOGY
+======================================================================
+Found 4 PDFs in Sociology/
+
+  Processing: NCERT-Class-11-Sociology-Part-2.pdf
+    ✓ 104 pages, 405,262 characters
+
+  Processing: NCERT-Class-11-Sociology-Part-1 (1).pdf
+    ✓ 104 pages, 237,625 characters
+
+  Processing: NCERT-Class-12-Sociology-Part-1.pdf
+    ✓ 162 pages, 713,022 characters
+
+  Processing: NCERT-Class-12-Sociology-Part-2.pdf
+    ✓ 165 pages, 484,333 characters
+
+Cleaning SOCIOLOGY texts...
+  ✓ NCERT-Class-11-Sociology-Part-2.pdf: 405,262 → 405,248 chars
+  ✓ NCERT-Class-11-Sociology-Part-1 (1).pdf: 237,625 → 237,575 chars
+  ✓ NCERT-Class-12-Sociology-Part-1.pdf: 713,022 → 711,345 chars
+  ✓ NCERT-Class-12-Sociology-Part-2.pdf: 484,333 → 482,576 chars
+
+Creating chunks for SOCIOLOGY...
+  ✓ NCERT-Class-11-Sociology-Part-2.pdf: 2 chunks
+  ✓ NCERT-Class-11-Sociology-Part-1 (1).pdf: 446 chunks
+  ✓ NCERT-Class-12-Sociology-Part-1.pdf: 1 chunks
+  ✓ NCERT-Class-12-Sociology-Part-2.pdf: 1011 chunks
+  TOTAL CHUNKS (Sociology): 1460
+
+Saving SOCIOLOGY data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 1460 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 1314
+  ✓ Val size: 146
+  ✓ Saved to ./dataset_output/Sociology/hf_dataset
+
+✓ SOCIOLOGY COMPLETE
+  Chunks: 1460
+  Avg length: 1257 chars
+
+======================================================================
+EXTRACTING: ART
+======================================================================
+Found 3 PDFs in Art/
+
+  Processing: Introduction to Indian Art  _.pdf
+    ✓ 146 pages, 216,908 characters
+
+  Processing: NCERT-Class-11-Heritage-Crafts.pdf
+    ✓ 125 pages, 237,777 characters
+
+  Processing: Class_XII_Heritage_Craft_-_Craft_Traditions_of_India.pdf
+    ✓ 133 pages, 191,732 characters
+
+Cleaning ART texts...
+  ✓ Introduction to Indian Art  _.pdf: 216,908 → 216,724 chars
+  ✓ NCERT-Class-11-Heritage-Crafts.pdf: 237,777 → 237,699 chars
+  ✓ Class_XII_Heritage_Craft_-_Craft_Traditions_of_India.pdf: 191,732 → 191,724 chars
+
+Creating chunks for ART...
+  ✓ Introduction to Indian Art  _.pdf: 369 chunks
+  ✓ NCERT-Class-11-Heritage-Crafts.pdf: 428 chunks
+  ✓ Class_XII_Heritage_Craft_-_Craft_Traditions_of_India.pdf: 295 chunks
+  TOTAL CHUNKS (Art): 1092
+
+Saving ART data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 1092 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 982
+  ✓ Val size: 110
+  ✓ Saved to ./dataset_output/Art/hf_dataset
+
+✓ ART COMPLETE
+  Chunks: 1092
+  Avg length: 590 chars
+
+======================================================================
+EXTRACTING: POLITY
+======================================================================
+Found 9 PDFs in Polity/
+
+  Processing: NCERT-Class-11-Political-Science-Part-1.pdf
+    ✓ 244 pages, 441,689 characters
+
+  Processing: NCERT-Class-12-Political-Science-Part-2.pdf
+    ✓ 197 pages, 456,741 characters
+
+  Processing: NCERT-Class-12-Political-Science-Part-1.pdf
+    ✓ 152 pages, 392,697 characters
+
+  Processing: NCERT-Class-10-Political-Science.pdf
+    ✓ 114 pages, 251,294 characters
+
+  Processing: social science 7.pdf
+    ✓ 124 pages, 206,923 characters
+
+  Processing: social science demo part 1.pdf
+    ✓ 123 pages, 306,721 characters
+
+  Processing: Polity6.pdf
+    ✓ 100 pages, 201,357 characters
+
+  Processing: NCERT-Class-11-Political-Science-Part-2-1.pdf
+    ✓ 160 pages, 595,613 characters
+
+  Processing: SOCIAL SCIENCE AND POLITICAL LIFE PART 3.pdf
+    ✓ 129 pages, 273,652 characters
+
+Cleaning POLITY texts...
+  ✓ NCERT-Class-11-Political-Science-Part-1.pdf: 441,689 → 441,502 chars
+  ✓ NCERT-Class-12-Political-Science-Part-2.pdf: 456,741 → 455,823 chars
+  ✓ NCERT-Class-12-Political-Science-Part-1.pdf: 392,697 → 391,721 chars
+  ✓ NCERT-Class-10-Political-Science.pdf: 251,294 → 250,904 chars
+  ✓ social science 7.pdf: 206,923 → 206,829 chars
+  ✓ social science demo part 1.pdf: 306,721 → 306,713 chars
+  ✓ Polity6.pdf: 201,357 → 200,915 chars
+  ✓ NCERT-Class-11-Political-Science-Part-2-1.pdf: 595,613 → 595,081 chars
+  ✓ SOCIAL SCIENCE AND POLITICAL LIFE PART 3.pdf: 273,652 → 273,551 chars
+
+Creating chunks for POLITY...
+  ✓ NCERT-Class-11-Political-Science-Part-1.pdf: 802 chunks
+  ✓ NCERT-Class-12-Political-Science-Part-2.pdf: 781 chunks
+  ✓ NCERT-Class-12-Political-Science-Part-1.pdf: 714 chunks
+  ✓ NCERT-Class-10-Political-Science.pdf: 472 chunks
+  ✓ social science 7.pdf: 453 chunks
+  ✓ social science demo part 1.pdf: 598 chunks
+  ✓ Polity6.pdf: 443 chunks
+  ✓ NCERT-Class-11-Political-Science-Part-2-1.pdf: 18 chunks
+  ✓ SOCIAL SCIENCE AND POLITICAL LIFE PART 3.pdf: 499 chunks
+  TOTAL CHUNKS (Polity): 4780
+
+Saving POLITY data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 4780 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 4302
+  ✓ Val size: 478
+  ✓ Saved to ./dataset_output/Polity/hf_dataset
+
+✓ POLITY COMPLETE
+  Chunks: 4780
+  Avg length: 652 chars
+
+======================================================================
+EXTRACTING: CHEMISTRY
+======================================================================
+Found 4 PDFs in Chemistry/
+
+  Processing: NCERT-Class-11-Chemistry-Part-2.pdf
+    ✓ 162 pages, 733,159 characters
+
+  Processing: NCERT-Class-11-Chemistry-Part-1.pdf
+    ✓ 254 pages, 1,101,618 characters
+
+  Processing: NCERT-Class-12-Chemistry-Part-1.pdf
+    ✓ 286 pages, 1,036,396 characters
+
+  Processing: NCERT-Class-12-Chemistry-Part-2.pdf
+    ✓ 186 pages, 322,699 characters
+
+Cleaning CHEMISTRY texts...
+  ✓ NCERT-Class-11-Chemistry-Part-2.pdf: 733,159 → 733,000 chars
+  ✓ NCERT-Class-11-Chemistry-Part-1.pdf: 1,101,618 → 1,098,455 chars
+  ✓ NCERT-Class-12-Chemistry-Part-1.pdf: 1,036,396 → 1,035,542 chars
+  ✓ NCERT-Class-12-Chemistry-Part-2.pdf: 322,699 → 322,606 chars
+
+Creating chunks for CHEMISTRY...
+  ✓ NCERT-Class-11-Chemistry-Part-2.pdf: 1 chunks
+  ✓ NCERT-Class-11-Chemistry-Part-1.pdf: 190 chunks
+  ✓ NCERT-Class-12-Chemistry-Part-1.pdf: 238 chunks
+  ✓ NCERT-Class-12-Chemistry-Part-2.pdf: 767 chunks
+  TOTAL CHUNKS (Chemistry): 1196
+
+Saving CHEMISTRY data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 1196 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 1076
+  ✓ Val size: 120
+  ✓ Saved to ./dataset_output/Chemistry/hf_dataset
+
+✓ CHEMISTRY COMPLETE
+  Chunks: 1196
+  Avg length: 2666 chars
+
+======================================================================
+EXTRACTING: SCIENCE
+======================================================================
+Found 7 PDFs in Science/
+
+  Processing: NCERT-Class-10-Science-Exemplar-Problems-1.pdf
+    ✓ 223 pages, 306,775 characters
+
+  Processing: science class 8.pdf
+    ✓ 265 pages, 474,615 characters
+
+  Processing: NCERT-Class-9-Science-Exemplar-Problems.pdf
+    ✓ 192 pages, 400,926 characters
+
+  Processing: NCERT-Class-10-Science.pdf
+    ✓ 282 pages, 1,022,894 characters
+
+  Processing: Copy of science class 7.pdf
+    ✓ 248 pages, 431,111 characters
+
+  Processing: science class 6.pdf
+    ✓ 176 pages, 321,615 characters
+
+  Processing: class 9 science.pdf
+    ✓ 225 pages, 539,298 characters
+
+Cleaning SCIENCE texts...
+  ✓ NCERT-Class-10-Science-Exemplar-Problems-1.pdf: 306,775 → 306,400 chars
+  ✓ science class 8.pdf: 474,615 → 472,365 chars
+  ✓ NCERT-Class-9-Science-Exemplar-Problems.pdf: 400,926 → 400,403 chars
+  ✓ NCERT-Class-10-Science.pdf: 1,022,894 → 1,022,324 chars
+  ✓ Copy of science class 7.pdf: 431,111 → 428,541 chars
+  ✓ science class 6.pdf: 321,615 → 321,089 chars
+  ✓ class 9 science.pdf: 539,298 → 535,712 chars
+
+Creating chunks for SCIENCE...
+  ✓ NCERT-Class-10-Science-Exemplar-Problems-1.pdf: 743 chunks
+  ✓ science class 8.pdf: 1444 chunks
+  ✓ NCERT-Class-9-Science-Exemplar-Problems.pdf: 52 chunks
+  ✓ NCERT-Class-10-Science.pdf: 1 chunks
+  ✓ Copy of science class 7.pdf: 1317 chunks
+  ✓ science class 6.pdf: 884 chunks
+  ✓ class 9 science.pdf: 1424 chunks
+  TOTAL CHUNKS (Science): 5865
+
+Saving SCIENCE data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 5865 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 5278
+  ✓ Val size: 587
+  ✓ Saved to ./dataset_output/Science/hf_dataset
+
+✓ SCIENCE COMPLETE
+  Chunks: 5865
+  Avg length: 593 chars
+
+======================================================================
+EXTRACTING: HISTORY
+======================================================================
+Found 9 PDFs in History/
+
+  Processing: NCERT-Class-10-History.pdf
+    ✓ 196 pages, 458,296 characters
+
+  Processing: class 9 abc.pdf
+    ✓ 191 pages, 440,307 characters
+
+  Processing: NCERT-Class-12-History-Part-3.pdf
+    ✓ 178 pages, 704,613 characters
+
+  Processing: NCERT-Class-12-History-Part-2.pdf
+    ✓ 146 pages, 347,085 characters
+
+  Processing: NCERT-Class-12-History-Part-1 (1).pdf
+    ✓ 117 pages, 272,124 characters
+
+  Processing: History6.pdf
+    ✓ 150 pages, 224,447 characters
+
+  Processing: Copy of our past class 7 social science.pdf
+    ✓ 170 pages, 292,454 characters
+
+  Processing: NCERT-Class-11-History.pdf
+    ✓ 260 pages, 913,022 characters
+
+  Processing: OUR PAST PART 2 CLASS 8 SOCIAL SCIENCE.pdf
+    ✓ 105 pages, 214,745 characters
+
+Cleaning HISTORY texts...
+  ✓ NCERT-Class-10-History.pdf: 458,296 → 457,589 chars
+  ✓ class 9 abc.pdf: 440,307 → 439,595 chars
+  ✓ NCERT-Class-12-History-Part-3.pdf: 704,613 → 704,456 chars
+  ✓ NCERT-Class-12-History-Part-2.pdf: 347,085 → 346,976 chars
+  ✓ NCERT-Class-12-History-Part-1 (1).pdf: 272,124 → 272,018 chars
+  ✓ History6.pdf: 224,447 → 224,342 chars
+  ✓ Copy of our past class 7 social science.pdf: 292,454 → 292,117 chars
+  ✓ NCERT-Class-11-History.pdf: 913,022 → 912,531 chars
+  ✓ OUR PAST PART 2 CLASS 8 SOCIAL SCIENCE.pdf: 214,745 → 214,698 chars
+
+Creating chunks for HISTORY...
+  ✓ NCERT-Class-10-History.pdf: 865 chunks
+  ✓ class 9 abc.pdf: 894 chunks
+  ✓ NCERT-Class-12-History-Part-3.pdf: 227 chunks
+  ✓ NCERT-Class-12-History-Part-2.pdf: 667 chunks
+  ✓ NCERT-Class-12-History-Part-1 (1).pdf: 539 chunks
+  ✓ History6.pdf: 478 chunks
+  ✓ Copy of our past class 7 social science.pdf: 563 chunks
+  ✓ NCERT-Class-11-History.pdf: 168 chunks
+  ✓ OUR PAST PART 2 CLASS 8 SOCIAL SCIENCE.pdf: 362 chunks
+  TOTAL CHUNKS (History): 4763
+
+Saving HISTORY data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 4763 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 4286
+  ✓ Val size: 477
+  ✓ Saved to ./dataset_output/History/hf_dataset
+
+✓ HISTORY COMPLETE
+  Chunks: 4763
+  Avg length: 810 chars
+
+======================================================================
+EXTRACTING: ECONOMICS
+======================================================================
+Found 5 PDFs in Economics/
+
+  Processing: NCERT-Class-12-Economics-Part-1.pdf
+    ✓ 106 pages, 284,645 characters
+
+  Processing: NCERT-Class-12-Economics-Part-2.pdf
+    ✓ 106 pages, 566,755 characters
+
+  Processing: NCERT-Class-10-Economics.pdf
+    ✓ 93 pages, 265,349 characters
+
+  Processing: [Hindi (auto-generated)] How Did They Track Khamenei [DownSub.com].pdf
+    ✓ 93 pages, 265,349 characters
+
+  Processing: economics class 9.pdf
+    ✓ 51 pages, 109,364 characters
+
+Cleaning ECONOMICS texts...
+  ✓ NCERT-Class-12-Economics-Part-1.pdf: 284,645 → 282,152 chars
+  ✓ NCERT-Class-12-Economics-Part-2.pdf: 566,755 → 566,448 chars
+  ✓ NCERT-Class-10-Economics.pdf: 265,349 → 265,164 chars
+  ✓ [Hindi (auto-generated)] How Did They Track Khamenei [DownSub.com].pdf: 265,349 → 265,164 chars
+  ✓ economics class 9.pdf: 109,364 → 109,140 chars
+
+Creating chunks for ECONOMICS...
+  ✓ NCERT-Class-12-Economics-Part-1.pdf: 602 chunks
+  ✓ NCERT-Class-12-Economics-Part-2.pdf: 8 chunks
+  ✓ NCERT-Class-10-Economics.pdf: 565 chunks
+  ✓ [Hindi (auto-generated)] How Did They Track Khamenei [DownSub.com].pdf: 565 chunks
+  ✓ economics class 9.pdf: 243 chunks
+  TOTAL CHUNKS (Economics): 1983
+
+Saving ECONOMICS data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 1983 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 1784
+  ✓ Val size: 199
+  ✓ Saved to ./dataset_output/Economics/hf_dataset
+
+✓ ECONOMICS COMPLETE
+  Chunks: 1983
+  Avg length: 749 chars
+
+======================================================================
+EXTRACTING: PHYSICS
+======================================================================
+Found 4 PDFs in Physics/
+
+  Processing: NCERT-Class-12-Physics-Part-2.pdf
+    ✓ 254 pages, 699,184 characters
+
+  Processing: NCERT-Class-12-Physics-Part-1.pdf
+    ✓ 291 pages, 778,189 characters
+
+  Processing: NCERT-Class-11-Physics-Part-1.pdf
+    ✓ 234 pages, 920,318 characters
+
+  Processing: NCERT-Class-11-Physics-Part-2.pdf
+    ✓ 181 pages, 785,973 characters
+
+Cleaning PHYSICS texts...
+  ✓ NCERT-Class-12-Physics-Part-2.pdf: 699,184 → 695,490 chars
+  ✓ NCERT-Class-12-Physics-Part-1.pdf: 778,189 → 774,248 chars
+  ✓ NCERT-Class-11-Physics-Part-1.pdf: 920,318 → 919,113 chars
+  ✓ NCERT-Class-11-Physics-Part-2.pdf: 785,973 → 785,365 chars
+
+Creating chunks for PHYSICS...
+  ✓ NCERT-Class-12-Physics-Part-2.pdf: 1791 chunks
+  ✓ NCERT-Class-12-Physics-Part-1.pdf: 2086 chunks
+  ✓ NCERT-Class-11-Physics-Part-1.pdf: 130 chunks
+  ✓ NCERT-Class-11-Physics-Part-2.pdf: 8 chunks
+  TOTAL CHUNKS (Physics): 4015
+
+Saving PHYSICS data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 4015 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 3613
+  ✓ Val size: 402
+  ✓ Saved to ./dataset_output/Physics/hf_dataset
+
+✓ PHYSICS COMPLETE
+  Chunks: 4015
+  Avg length: 790 chars
+
+======================================================================
+EXTRACTING: GEOGRAPHY
+======================================================================
+Found 12 PDFs in Geography/
+
+  Processing: Fundamental of Physical Geography (Class XI) 2.pdf
+    ✓ 137 pages, 333,514 characters
+
+  Processing: Prelims PYQ (2011-2025).pdf
+    ✓ 137 pages, 333,514 characters
+
+  Processing: India Physical Environment (Class XI) 2.pdf
+    ✓ 83 pages, 193,453 characters
+
+  Processing: India People and Economy (Class XII).pdf
+    ✓ 126 pages, 294,491 characters
+
+  Processing: NCERT-Class-10-Geography.pdf
+    ✓ 197 pages, 733,330 characters
+
+  Processing: NCERT-Class-9-Geography-1.pdf
+    ✓ 64 pages, 225,871 characters
+
+  Processing: Geography.pdf
+    ✓ 69 pages, 95,810 characters
+
+  Processing: Practical Work in Geography Part 2.pdf
+    ✓ 77 pages, 157,838 characters
+
+  Processing: social science class 8.pdf
+    ✓ 84 pages, 147,052 characters
+
+  Processing: Practical Work in Geography Part 1.pdf
+    ✓ 105 pages, 152,635 characters
+
+  Processing: Fundamentals of Human Geography (Class XII) 1.pdf
+    ✓ 93 pages, 223,739 characters
+
+  Processing: Copy of our environmemnt class 7 - Copy.pdf
+    ✓ 89 pages, 147,501 characters
+
+Cleaning GEOGRAPHY texts...
+  ✓ Fundamental of Physical Geography (Class XI) 2.pdf: 333,514 → 333,394 chars
+  ✓ Prelims PYQ (2011-2025).pdf: 333,514 → 333,394 chars
+  ✓ India Physical Environment (Class XI) 2.pdf: 193,453 → 180,762 chars
+  ✓ India People and Economy (Class XII).pdf: 294,491 → 229,984 chars
+  ✓ NCERT-Class-10-Geography.pdf: 733,330 → 725,528 chars
+  ✓ NCERT-Class-9-Geography-1.pdf: 225,871 → 225,099 chars
+  ✓ Geography.pdf: 95,810 → 95,584 chars
+  ✓ Practical Work in Geography Part 2.pdf: 157,838 → 94,725 chars
+  ✓ social science class 8.pdf: 147,052 → 146,401 chars
+  ✓ Practical Work in Geography Part 1.pdf: 152,635 → 152,581 chars
+  ✓ Fundamentals of Human Geography (Class XII) 1.pdf: 223,739 → 223,562 chars
+  ✓ Copy of our environmemnt class 7 - Copy.pdf: 147,501 → 147,143 chars
+
+Creating chunks for GEOGRAPHY...
+  ✓ Fundamental of Physical Geography (Class XI) 2.pdf: 638 chunks
+  ✓ Prelims PYQ (2011-2025).pdf: 638 chunks
+  ✓ India Physical Environment (Class XI) 2.pdf: 313 chunks
+  ✓ India People and Economy (Class XII).pdf: 593 chunks
+  ✓ NCERT-Class-10-Geography.pdf: 100 chunks
+  ✓ NCERT-Class-9-Geography-1.pdf: 2 chunks
+  ✓ Geography.pdf: 263 chunks
+  ✓ Practical Work in Geography Part 2.pdf: 294 chunks
+  ✓ social science class 8.pdf: 340 chunks
+  ✓ Practical Work in Geography Part 1.pdf: 331 chunks
+  ✓ Fundamentals of Human Geography (Class XII) 1.pdf: 477 chunks
+  ✓ Copy of our environmemnt class 7 - Copy.pdf: 399 chunks
+  TOTAL CHUNKS (Geography): 4388
+
+Saving GEOGRAPHY data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 4388 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 3949
+  ✓ Val size: 439
+  ✓ Saved to ./dataset_output/Geography/hf_dataset
+
+✓ GEOGRAPHY COMPLETE
+  Chunks: 4388
+  Avg length: 657 chars
+
+======================================================================
+EXTRACTING: BIOLOGY
+======================================================================
+Found 2 PDFs in Biology/
+
+  Processing: NCERT-Class-12-Biology.pdf
+    ✓ 311 pages, 671,591 characters
+
+  Processing: NCERT-Class-11-Biology.pdf
+    ✓ 345 pages, 1,160,020 characters
+
+Cleaning BIOLOGY texts...
+  ✓ NCERT-Class-12-Biology.pdf: 671,591 → 292,095 chars
+  ✓ NCERT-Class-11-Biology.pdf: 1,160,020 → 1,158,257 chars
+
+Creating chunks for BIOLOGY...
+  ✓ NCERT-Class-12-Biology.pdf: 1841 chunks
+  ✓ NCERT-Class-11-Biology.pdf: 1 chunks
+  TOTAL CHUNKS (Biology): 1842
+
+Saving BIOLOGY data...
+  ✓ Saved extracted texts
+  ✓ Saved cleaned texts
+  ✓ Saved 1842 chunks to JSONL
+
+Converting to HuggingFace format...
+  ✓ Train size: 1657
+  ✓ Val size: 185
+  ✓ Saved to ./dataset_output/Biology/hf_dataset
+
+✓ BIOLOGY COMPLETE
+  Chunks: 1842
+  Avg length: 786 chars
+
+======================================================================
+CREATING COMBINED DATASET
+======================================================================
+
+✓ Saved 31384 combined chunks
+
+Converting to HuggingFace format...
+  ✓ Train size: 28245
+  ✓ Val size: 3139
+  ✓ Saved to ./dataset_output/combined/hf_dataset
+
+======================================================================
+✓ EXTRACTION COMPLETE!
+======================================================================
+
+SUMMARY BY SUBJECT:
+----------------------------------------------------------------------
+  Subject  Chunks Avg Length  Min     Max
+Sociology    1460       1257   18  711345
+      Art    1092        590   21    3002
+   Polity    4780        652    9  547715
+Chemistry    1196       2666   15  733000
+  Science    5865        593    7 1022324
+  History    4763        810   21   32700
+Economics    1983        749    7  167613
+  Physics    4015        790   12  430912
+Geography    4388        657   10  201756
+  Biology    1842        786    5 1158257
+
+----------------------------------------------------------------------
+TOTAL CHUNKS (All subjects): 31384
+Average chunk size: 800 chars
+
+Output directories:
+  ./dataset_output/Sociology/
+  ./dataset_output/Art/
+  ./dataset_output/Polity/
+  ./dataset_output/Chemistry/
+  ./dataset_output/Science/
+  ./dataset_output/History/
+  ./dataset_output/Economics/
+  ./dataset_output/Physics/
+  ./dataset_output/Geography/
+  ./dataset_output/Biology/
+  ./dataset_output/combined/
+
+======================================================================
+READY FOR TRAINING!
+======================================================================
+
+You can now train separate models for each subject:
+  - Phase 1: domain_adaptation_by_subject.py
+  - Phase 2: instruction_tuning_by_subject.py
+  - Phase 3: quantization_by_subject.py
