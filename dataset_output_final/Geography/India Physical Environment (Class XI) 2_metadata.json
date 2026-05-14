@@ -1,0 +1,15 @@
+{
+  "source_file": "India Physical Environment (Class XI) 2.pdf",
+  "subject": "Geography",
+  "pages_total": 83,
+  "pages_text": 81,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 130,
+  "mean_quality_score": 0.9966,
+  "raw_chars": 184430,
+  "cleaned_chars": 182415,
+  "char_retention_pct": 98.91,
+  "processing_time_sec": 3.48,
+  "errors": []
+}

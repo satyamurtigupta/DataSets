@@ -1,0 +1,15 @@
+{
+  "source_file": "History6.pdf",
+  "subject": "History",
+  "pages_total": 150,
+  "pages_text": 148,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 151,
+  "mean_quality_score": 0.9992,
+  "raw_chars": 211001,
+  "cleaned_chars": 209461,
+  "char_retention_pct": 99.27,
+  "processing_time_sec": 6.3,
+  "errors": []
+}

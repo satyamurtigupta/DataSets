@@ -1,0 +1,15 @@
+{
+  "source_file": "Polity6.pdf",
+  "subject": "Polity",
+  "pages_total": 100,
+  "pages_text": 96,
+  "pages_ocr": 4,
+  "pages_failed": 0,
+  "chunks_generated": 117,
+  "mean_quality_score": 0.9987,
+  "raw_chars": 165203,
+  "cleaned_chars": 164665,
+  "char_retention_pct": 99.67,
+  "processing_time_sec": 34.76,
+  "errors": []
+}

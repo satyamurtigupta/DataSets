@@ -1,0 +1,15 @@
+{
+  "source_file": "class 9 abc.pdf",
+  "subject": "History",
+  "pages_total": 191,
+  "pages_text": 189,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 253,
+  "mean_quality_score": 0.9938,
+  "raw_chars": 389127,
+  "cleaned_chars": 385016,
+  "char_retention_pct": 98.94,
+  "processing_time_sec": 8.93,
+  "errors": []
+}

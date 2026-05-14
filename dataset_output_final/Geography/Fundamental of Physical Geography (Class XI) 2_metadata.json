@@ -1,0 +1,15 @@
+{
+  "source_file": "Fundamental of Physical Geography (Class XI) 2.pdf",
+  "subject": "Geography",
+  "pages_total": 137,
+  "pages_text": 135,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 243,
+  "mean_quality_score": 0.9978,
+  "raw_chars": 328038,
+  "cleaned_chars": 323030,
+  "char_retention_pct": 98.47,
+  "processing_time_sec": 4.66,
+  "errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-10-Political-Science.pdf",
+  "subject": "Polity",
+  "pages_total": 114,
+  "pages_text": 104,
+  "pages_ocr": 10,
+  "pages_failed": 0,
+  "chunks_generated": 155,
+  "mean_quality_score": 0.9394,
+  "raw_chars": 241428,
+  "cleaned_chars": 236297,
+  "char_retention_pct": 97.87,
+  "processing_time_sec": 21.72,
+  "errors": []
+}

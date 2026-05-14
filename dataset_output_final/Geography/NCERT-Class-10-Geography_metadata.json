@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-10-Geography.pdf",
+  "subject": "Geography",
+  "pages_total": 197,
+  "pages_text": 4,
+  "pages_ocr": 193,
+  "pages_failed": 0,
+  "chunks_generated": 313,
+  "mean_quality_score": 0.9877,
+  "raw_chars": 452302,
+  "cleaned_chars": 450484,
+  "char_retention_pct": 99.6,
+  "processing_time_sec": 404.55,
+  "errors": []
+}

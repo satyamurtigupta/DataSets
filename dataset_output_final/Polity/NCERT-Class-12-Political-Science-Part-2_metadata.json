@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-12-Political-Science-Part-2.pdf",
+  "subject": "Polity",
+  "pages_total": 197,
+  "pages_text": 193,
+  "pages_ocr": 4,
+  "pages_failed": 0,
+  "chunks_generated": 237,
+  "mean_quality_score": 0.987,
+  "raw_chars": 405906,
+  "cleaned_chars": 394119,
+  "char_retention_pct": 97.1,
+  "processing_time_sec": 24.96,
+  "errors": []
+}

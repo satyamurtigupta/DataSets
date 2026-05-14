@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-12-History-Part-2.pdf",
+  "subject": "History",
+  "pages_total": 146,
+  "pages_text": 144,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 222,
+  "mean_quality_score": 0.9967,
+  "raw_chars": 296701,
+  "cleaned_chars": 293328,
+  "char_retention_pct": 98.86,
+  "processing_time_sec": 10.58,
+  "errors": []
+}

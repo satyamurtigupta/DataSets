@@ -1,17 +1,6 @@
 {
-  "builder_name": "json",
   "citation": "",
-  "config_name": "default",
-  "dataset_name": "json",
-  "dataset_size": 38518541,
   "description": "",
-  "download_checksums": {
-    "/Users/satyamurti/Downloads/DataSets/./dataset_output/combined/training_chunks.jsonl": {
-      "num_bytes": 39961849,
-      "checksum": null
-    }
-  },
-  "download_size": 39961849,
   "features": {
     "text": {
       "dtype": "string",
@@ -35,20 +24,5 @@
     }
   },
   "homepage": "",
-  "license": "",
-  "size_in_bytes": 78480390,
-  "splits": {
-    "train": {
-      "name": "train",
-      "num_bytes": 38518541,
-      "num_examples": 31384,
-      "dataset_name": "json"
-    }
-  },
-  "version": {
-    "version_str": "0.0.0",
-    "major": 0,
-    "minor": 0,
-    "patch": 0
-  }
+  "license": ""
 }

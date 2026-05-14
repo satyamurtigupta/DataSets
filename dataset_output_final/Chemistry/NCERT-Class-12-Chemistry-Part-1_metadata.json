@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-12-Chemistry-Part-1.pdf",
+  "subject": "Chemistry",
+  "pages_total": 286,
+  "pages_text": 31,
+  "pages_ocr": 255,
+  "pages_failed": 0,
+  "chunks_generated": 410,
+  "mean_quality_score": 0.9803,
+  "raw_chars": 647180,
+  "cleaned_chars": 644075,
+  "char_retention_pct": 99.52,
+  "processing_time_sec": 659.2,
+  "errors": []
+}

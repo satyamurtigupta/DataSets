@@ -1,0 +1,15 @@
+{
+  "source_file": "NCERT-Class-11-Sociology-Part-2.pdf",
+  "subject": "Sociology",
+  "pages_total": 104,
+  "pages_text": 1,
+  "pages_ocr": 103,
+  "pages_failed": 0,
+  "chunks_generated": 158,
+  "mean_quality_score": 1.0,
+  "raw_chars": 241159,
+  "cleaned_chars": 240347,
+  "char_retention_pct": 99.66,
+  "processing_time_sec": 159.08,
+  "errors": []
+}

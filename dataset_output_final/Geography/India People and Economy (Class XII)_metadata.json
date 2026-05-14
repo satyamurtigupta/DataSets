@@ -1,0 +1,15 @@
+{
+  "source_file": "India People and Economy (Class XII).pdf",
+  "subject": "Geography",
+  "pages_total": 126,
+  "pages_text": 123,
+  "pages_ocr": 3,
+  "pages_failed": 0,
+  "chunks_generated": 164,
+  "mean_quality_score": 0.984,
+  "raw_chars": 266335,
+  "cleaned_chars": 261220,
+  "char_retention_pct": 98.08,
+  "processing_time_sec": 5.71,
+  "errors": []
+}

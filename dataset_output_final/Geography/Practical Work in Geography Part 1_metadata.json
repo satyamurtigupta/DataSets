@@ -1,0 +1,15 @@
+{
+  "source_file": "Practical Work in Geography Part 1.pdf",
+  "subject": "Geography",
+  "pages_total": 105,
+  "pages_text": 102,
+  "pages_ocr": 3,
+  "pages_failed": 0,
+  "chunks_generated": 106,
+  "mean_quality_score": 0.9954,
+  "raw_chars": 133105,
+  "cleaned_chars": 129287,
+  "char_retention_pct": 97.13,
+  "processing_time_sec": 5.87,
+  "errors": []
+}

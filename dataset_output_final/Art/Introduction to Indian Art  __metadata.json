@@ -1,0 +1,15 @@
+{
+  "source_file": "Introduction to Indian Art  _.pdf",
+  "subject": "Art",
+  "pages_total": 146,
+  "pages_text": 144,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 151,
+  "mean_quality_score": 0.9856,
+  "raw_chars": 215928,
+  "cleaned_chars": 213002,
+  "char_retention_pct": 98.64,
+  "processing_time_sec": 5.92,
+  "errors": []
+}

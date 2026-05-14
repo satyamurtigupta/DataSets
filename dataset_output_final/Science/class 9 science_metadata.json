@@ -1,0 +1,15 @@
+{
+  "source_file": "class 9 science.pdf",
+  "subject": "Science",
+  "pages_total": 225,
+  "pages_text": 223,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 378,
+  "mean_quality_score": 0.9919,
+  "raw_chars": 524846,
+  "cleaned_chars": 521490,
+  "char_retention_pct": 99.36,
+  "processing_time_sec": 10.72,
+  "errors": []
+}
