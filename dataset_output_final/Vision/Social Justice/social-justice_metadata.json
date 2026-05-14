@@ -1,0 +1,12 @@
+{
+  "source_file": "social-justice.pdf",
+  "subject": "Social Justice",
+  "pages_total": 150,
+  "pages_text": 148,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 263,
+  "mean_quality_score": 0.985,
+  "processing_time_sec": 31.93,
+  "errors": []
+}

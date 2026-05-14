@@ -1,0 +1,12 @@
+{
+  "source_file": "society-part-1.pdf",
+  "subject": "Society",
+  "pages_total": 146,
+  "pages_text": 144,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 302,
+  "mean_quality_score": 0.99,
+  "processing_time_sec": 32.47,
+  "errors": []
+}
