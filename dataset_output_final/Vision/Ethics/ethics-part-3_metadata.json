@@ -1,0 +1,12 @@
+{
+  "source_file": "ethics-part-3.pdf",
+  "subject": "Ethics",
+  "pages_total": 144,
+  "pages_text": 142,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 280,
+  "mean_quality_score": 0.989,
+  "processing_time_sec": 32.3,
+  "errors": []
+}

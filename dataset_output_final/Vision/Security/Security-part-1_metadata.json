@@ -1,0 +1,12 @@
+{
+  "source_file": "Security-part-1.pdf",
+  "subject": "Security",
+  "pages_total": 141,
+  "pages_text": 139,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 272,
+  "mean_quality_score": 0.9864,
+  "processing_time_sec": 31.8,
+  "errors": []
+}

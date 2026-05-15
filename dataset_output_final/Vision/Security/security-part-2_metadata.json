@@ -1,0 +1,12 @@
+{
+  "source_file": "security-part-2.pdf",
+  "subject": "Security",
+  "pages_total": 127,
+  "pages_text": 125,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 255,
+  "mean_quality_score": 0.9871,
+  "processing_time_sec": 29.35,
+  "errors": []
+}

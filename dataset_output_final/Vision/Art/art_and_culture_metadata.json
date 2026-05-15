@@ -1,0 +1,12 @@
+{
+  "source_file": "art_and_culture.pdf",
+  "subject": "Art",
+  "pages_total": 82,
+  "pages_text": 82,
+  "pages_ocr": 0,
+  "pages_failed": 0,
+  "chunks_generated": 168,
+  "mean_quality_score": 0.9969,
+  "processing_time_sec": 1.27,
+  "errors": []
+}
