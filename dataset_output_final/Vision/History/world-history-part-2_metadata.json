@@ -1,0 +1,15 @@
+{
+  "source_file": "world-history-part-2.pdf",
+  "subject": "History",
+  "pages_total": 178,
+  "pages_text": 178,
+  "pages_ocr": 0,
+  "pages_failed": 0,
+  "chunks_generated": 344,
+  "mean_quality_score": 0.9972,
+  "raw_chars": 617273,
+  "cleaned_chars": 574413,
+  "char_retention_pct": 93.06,
+  "processing_time_sec": 2.42,
+  "errors": []
+}

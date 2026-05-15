@@ -1,0 +1,15 @@
+{
+  "source_file": "society-part-2.pdf",
+  "subject": "Society",
+  "pages_total": 106,
+  "pages_text": 104,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 202,
+  "mean_quality_score": 0.9907,
+  "raw_chars": 345056,
+  "cleaned_chars": 318250,
+  "char_retention_pct": 92.23,
+  "processing_time_sec": 28.27,
+  "errors": []
+}

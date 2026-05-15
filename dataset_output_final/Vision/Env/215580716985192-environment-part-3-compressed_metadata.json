@@ -1,0 +1,15 @@
+{
+  "source_file": "215580716985192-environment-part-3-compressed.pdf",
+  "subject": "Env",
+  "pages_total": 103,
+  "pages_text": 99,
+  "pages_ocr": 4,
+  "pages_failed": 0,
+  "chunks_generated": 128,
+  "mean_quality_score": 0.9805,
+  "raw_chars": 229883,
+  "cleaned_chars": 204362,
+  "char_retention_pct": 88.9,
+  "processing_time_sec": 36.19,
+  "errors": []
+}

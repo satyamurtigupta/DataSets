@@ -1,0 +1,15 @@
+{
+  "source_file": "21528071699ca92-economy-part-4.pdf",
+  "subject": "Economics",
+  "pages_total": 151,
+  "pages_text": 149,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 280,
+  "mean_quality_score": 0.9865,
+  "raw_chars": 506122,
+  "cleaned_chars": 466805,
+  "char_retention_pct": 92.23,
+  "processing_time_sec": 34.34,
+  "errors": []
+}

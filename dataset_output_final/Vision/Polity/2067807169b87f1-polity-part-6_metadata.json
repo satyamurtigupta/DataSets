@@ -1,0 +1,15 @@
+{
+  "source_file": "2067807169b87f1-polity-part-6.pdf",
+  "subject": "Polity",
+  "pages_total": 180,
+  "pages_text": 178,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 394,
+  "mean_quality_score": 0.9894,
+  "raw_chars": 613892,
+  "cleaned_chars": 567167,
+  "char_retention_pct": 92.39,
+  "processing_time_sec": 42.36,
+  "errors": []
+}

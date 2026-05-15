@@ -1,0 +1,15 @@
+{
+  "source_file": "2150807169d63be-economy-part-2.pdf",
+  "subject": "Economics",
+  "pages_total": 238,
+  "pages_text": 236,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 491,
+  "mean_quality_score": 0.9867,
+  "raw_chars": 766914,
+  "cleaned_chars": 704236,
+  "char_retention_pct": 91.83,
+  "processing_time_sec": 52.86,
+  "errors": []
+}

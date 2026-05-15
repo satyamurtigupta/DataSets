@@ -1,0 +1,15 @@
+{
+  "source_file": "206580716906333-polity-part-4.pdf",
+  "subject": "Polity",
+  "pages_total": 106,
+  "pages_text": 104,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 200,
+  "mean_quality_score": 0.9897,
+  "raw_chars": 343658,
+  "cleaned_chars": 316275,
+  "char_retention_pct": 92.03,
+  "processing_time_sec": 27.3,
+  "errors": []
+}

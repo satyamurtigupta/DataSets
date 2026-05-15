@@ -1,0 +1,15 @@
+{
+  "source_file": "2154807169a2d30-environment-part-2-compressed.pdf",
+  "subject": "Env",
+  "pages_total": 213,
+  "pages_text": 209,
+  "pages_ocr": 4,
+  "pages_failed": 0,
+  "chunks_generated": 391,
+  "mean_quality_score": 0.9847,
+  "raw_chars": 704050,
+  "cleaned_chars": 648293,
+  "char_retention_pct": 92.08,
+  "processing_time_sec": 67.86,
+  "errors": []
+}
