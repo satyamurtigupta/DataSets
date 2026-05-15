@@ -1,0 +1,83 @@
+{
+  "Art_and_Culture": [
+    "music of india", "music- classical", "dances of india", "dance of india",
+    "indian theatre", "indian puppetry", "indian paintings", "paintings",
+    "language and literature", "science and technology through the ages",
+    "science through the ages", "folk", "puppetry", "modern"
+  ],
+  "Polity": [
+    "preamble", "citizenship", "fundamental rights", "fundamental duties",
+    "dpsp", "directive principles of state policy",
+    "parliament", "supreme court", "high court", "subordinate court",
+    "union executive", "state executive", "state legislature",
+    "constitutional bodies", "non-constitutional bodies",
+    "electoral process", "local self government",
+    "centre state", "centre-state", "inter-state",
+    "emergency provision", "union and its territory",
+    "different states", "administrative system",
+    "cooperative societies", "cabinet committees",
+    "basic polity", "evolution of constitution",
+    "historical background of indian constitution",
+    "judiciary part", "judiciary -"
+  ],
+  "History_Modern": [
+    "revolt of 1857", "governor general", "viceroy",
+    "settlement policy", "east india company", "consolidation",
+    "freedom movement", "towards freedom and partition",
+    "mahatma gandhi", "mahatma", "gandhi",
+    "early political organizations",
+    "socio religious reform", "revolutionary nationalism",
+    "peasant", "civil rebellion",
+    "development of education", "important outcomes", "capitalists",
+    "1939-1947", "1919-1938", "anglo french", "marathas and maysore",
+    "acts_judiciary_police", "congress", "development)"
+  ],
+  "History_Ancient_Medieval": [
+    "ancient india", "mahajanapada", "mahajanpada",
+    "gupta and harsha", "delhi sultanate",
+    "great mughals", "mughal empire", "of the mughal",
+    "important kingdom", "important kingdoms",
+    "regional powers", "emergence of regional",
+    "architecture and sculpture", "religion and philosophy",
+    "including marathas"
+  ],
+  "Environment_and_Ecology": [
+    "biodiversity", "of biodiversity",
+    "ecosystem", "ecosysytems", "ecology", "wetland", "mangrove",
+    "conservation of biodiversity", "climate change", "global warming",
+    "combating climate", "pollution", "waste management",
+    "renewable energy", "energy conservation",
+    "land and water degradation",
+    "prominent protected areas", "protected areas",
+    "prominent threatened species", "threatened species",
+    "sustainable development", "sustainable agriculture",
+    "initiatives", "etc change"
+  ],
+  "Economy": [
+    "national income", "banking", "monetary policy",
+    "money market", "money", "inflation", "taxation", "union budget",
+    "external sector", "the wto", "wto",
+    "poverty and inequality", "employment", "unemployment",
+    "infrastructure part", "food processing", "planning in india",
+    "industry part", "industrial policies",
+    "india and international institutions", "miscellaneous",
+    "agriculture"
+  ],
+  "Geography": [
+    "water transport", "air transport", "land transport",
+    "volcanism", "universe and solar system", "universe", "solar system",
+    "precipitation", "ocean basics", "ocean",
+    "mountain building", "island formation", "hotspot",
+    "landform", "international trade",
+    "interior of the earth", "interior of earth",
+    "insolation", "indian climate", "indian agriculture",
+    "geography location", "physiography",
+    "earthquake", "tsunami", "drainage pattern",
+    "distribution of key natural resources", "natural resources",
+    "coral reef", "continental drift", "plate tectonic",
+    "composition of atmosphere", "composition of the atmosphere",
+    "climate and global climate", "basics of soils", "soils",
+    "air mass", "airmass", "mineral resources", "manufacturing industries",
+    "location of industries", "systems", "distribution of key"
+  ]
+}
