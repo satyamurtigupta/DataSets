@@ -32,6 +32,7 @@ import json
 import logging
 import os
 import re
+import random
 import sys
 import time
 import unicodedata
@@ -1105,35 +1106,119 @@ class DatasetMerger:
         combined_dir = output_dir / "combined"
         combined_dir.mkdir(parents=True, exist_ok=True)
 
-        import random
         rng = random.Random(self.config.hf_shuffle_seed)
-        shuffled = all_chunks[:]
-        rng.shuffle(shuffled)
 
-        # Stage 1 — pretrain JSONL (plain text, no special tokens)
-        pretrain_path = combined_dir / "unified_pretrain.jsonl"
-        with open(pretrain_path, 'w', encoding='utf-8') as f:
-            for chunk in shuffled:
-                f.write(json.dumps(self.writer._pretrain_record(chunk),
-                                   ensure_ascii=False) + '\n')
-        log.info(f"Pretrain JSONL: {pretrain_path}  ({len(shuffled)} records)")
+        if all_chunks:
+            # ── Normal run path: new chunks were extracted this session ──
+            shuffled = all_chunks[:]
+            rng.shuffle(shuffled)
 
-        # Stage 2 — SFT JSONL (Gemma 2 chat format)
-        sft_chunks = [c for c in shuffled if c.word_count >= 50]
-        sft_path = combined_dir / "unified_sft.jsonl"
-        with open(sft_path, 'w', encoding='utf-8') as f:
-            for chunk in sft_chunks:
-                f.write(json.dumps(self.writer._sft_record(chunk),
-                                   ensure_ascii=False) + '\n')
-        log.info(f"SFT JSONL:     {sft_path}  ({len(sft_chunks)} records)")
+            # Stage 1 — pretrain JSONL
+            pretrain_path = combined_dir / "unified_pretrain.jsonl"
+            with open(pretrain_path, 'w', encoding='utf-8') as f:
+                for chunk in shuffled:
+                    f.write(json.dumps(self.writer._pretrain_record(chunk),
+                                       ensure_ascii=False) + '\n')
+            log.info(f"Pretrain JSONL: {pretrain_path}  ({len(shuffled)} records)")
 
-        # HuggingFace Dataset
-        if HAS_DATASETS:
-            self._save_hf_dataset(shuffled, combined_dir)
+            # Stage 2 — SFT JSONL
+            sft_chunks = [c for c in shuffled if c.word_count >= 50]
+            sft_path = combined_dir / "unified_sft.jsonl"
+            with open(sft_path, 'w', encoding='utf-8') as f:
+                for chunk in sft_chunks:
+                    f.write(json.dumps(self.writer._sft_record(chunk),
+                                       ensure_ascii=False) + '\n')
+            log.info(f"SFT JSONL:     {sft_path}  ({len(sft_chunks)} records)")
+
+            if HAS_DATASETS:
+                self._save_hf_dataset(shuffled, combined_dir)
+            else:
+                log.warning("datasets package not found — skipping HuggingFace Dataset output")
+
+            self._print_summary(shuffled, combined_dir)
+
         else:
-            log.warning("datasets package not found — skipping HuggingFace Dataset output")
+            # ── Merge-only path: write directly from the records loaded off disk ──
+            rng.shuffle(all_records)
 
-        self._print_summary(shuffled, combined_dir)
+            # Stage 1 — pretrain JSONL (records already in pretrain format)
+            pretrain_path = combined_dir / "unified_pretrain.jsonl"
+            with open(pretrain_path, 'w', encoding='utf-8') as f:
+                for rec in all_records:
+                    f.write(json.dumps(rec, ensure_ascii=False) + '\n')
+            log.info(f"Pretrain JSONL: {pretrain_path}  ({len(all_records)} records)")
+
+            # Stage 2 — SFT JSONL (reconstruct chat template from stored text)
+            sft_path = combined_dir / "unified_sft.jsonl"
+            sft_count = 0
+            with open(sft_path, 'w', encoding='utf-8') as f:
+                for rec in all_records:
+                    if rec.get("word_count", 0) < 50:
+                        continue
+                    summary = _extractive_summary(rec["text"])
+                    sft_text = _SFT_TEMPLATE.format(
+                        subject=rec.get("subject", ""),
+                        text=rec["text"],
+                        summary=summary,
+                    )
+                    sft_rec = {
+                        "id":          rec["id"] + "_sft",
+                        "text":        sft_text,
+                        "subject":     rec.get("subject", ""),
+                        "source_file": rec.get("source_file", ""),
+                        "chunk_index": rec.get("chunk_index", 0),
+                        "language":    rec.get("language", "en"),
+                    }
+                    f.write(json.dumps(sft_rec, ensure_ascii=False) + '\n')
+                    sft_count += 1
+            log.info(f"SFT JSONL:     {sft_path}  ({sft_count} records)")
+
+            # HuggingFace Dataset
+            if HAS_DATASETS:
+                ds = Dataset.from_list(all_records)
+                split_idx = int(len(ds) * (1.0 - self.config.hf_test_split))
+                dd = DatasetDict({
+                    "train": ds.select(range(split_idx)),
+                    "test":  ds.select(range(split_idx, len(ds))),
+                })
+                hf_path = combined_dir / "hf_dataset"
+                dd.save_to_disk(str(hf_path))
+                log.info(f"HF Dataset:    {hf_path}  "
+                         f"(train={len(dd['train'])}, test={len(dd['test'])})")
+            else:
+                log.warning("datasets package not found — skipping HuggingFace Dataset output")
+
+            # Summary from records (dicts)
+            by_subject  = Counter(r.get("subject", "unknown") for r in all_records)
+            by_strategy = Counter(r.get("extraction_strategy", "unknown") for r in all_records)
+            mean_q = (sum(r.get("quality_score", 0) for r in all_records)
+                      / max(1, len(all_records)))
+            summary_data = {
+                "total_chunks":      len(all_records),
+                "total_words":       sum(r.get("word_count", 0) for r in all_records),
+                "mean_quality_score":round(mean_q, 4),
+                "by_subject":        dict(sorted(by_subject.items())),
+                "by_strategy":       dict(sorted(by_strategy.items())),
+            }
+            summary_path = combined_dir / "dataset_summary.json"
+            summary_path.write_text(json.dumps(summary_data, indent=2, ensure_ascii=False))
+
+            log.info("")
+            log.info("=" * 60)
+            log.info("DATASET SUMMARY")
+            log.info("=" * 60)
+            log.info(f"Total chunks : {summary_data['total_chunks']:,}")
+            log.info(f"Total words  : {summary_data['total_words']:,}")
+            log.info(f"Mean quality : {summary_data['mean_quality_score']:.3f}")
+            log.info("")
+            log.info("By subject:")
+            for subj, cnt in summary_data["by_subject"].items():
+                log.info(f"  {subj:<20} {cnt:>6,}")
+            log.info("")
+            log.info("By strategy:")
+            for strat, cnt in summary_data["by_strategy"].items():
+                log.info(f"  {strat:<20} {cnt:>6,}")
+            log.info("=" * 60)
 
     def _save_hf_dataset(self, chunks: List[Chunk], combined_dir: Path) -> None:
         records = [self.writer._pretrain_record(c) for c in chunks]
