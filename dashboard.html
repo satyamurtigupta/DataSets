@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPSC PDF Dataset Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #0f172a;
+    --surface:  #1e293b;
+    --surface2: #273346;
+    --border:   #334155;
+    --text:     #e2e8f0;
+    --muted:    #94a3b8;
+    --accent:   #6366f1;
+    --accent2:  #22d3ee;
+    --green:    #10b981;
+    --amber:    #f59e0b;
+    --red:      #ef4444;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 32px 24px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .header p { color: var(--muted); margin-top: 4px; font-size: 13px; }
+
+  /* ── Layout ── */
+  .page { max-width: 1400px; margin: 0 auto; padding: 28px 24px; }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── KPI Cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 6px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* ── Charts ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .charts-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+  }
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-wrap-sm { position: relative; height: 180px; }
+
+  /* ── Subject Cards ── */
+  .subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .subject-card { padding: 20px; }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+  .subject-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .subject-meta  { font-size: 12px; color: var(--muted); }
+  .subject-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    flex: 1;
+    min-width: 90px;
+  }
+  .pill-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .pill-value { font-size: 16px; font-weight: 700; margin-top: 2px; }
+  .pct { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+  /* ── PDF Detail Table ── */
+  .pdf-details summary {
+    font-size: 12px;
+    color: var(--accent2);
+    cursor: pointer;
+    user-select: none;
+    padding: 6px 0;
+  }
+  .pdf-details summary:hover { color: #fff; }
+  .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 12px;
+  }
+  .pdf-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .pdf-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid rgba(51,65,85,0.5);
+    vertical-align: middle;
+  }
+  .pdf-table tr:last-child td { border-bottom: none; }
+  .pdf-name { max-width: 260px; word-break: break-all; color: var(--text); }
+  .num { text-align: right; white-space: nowrap; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+  .badge-ocr { background: rgba(99,102,241,0.2); color: #818cf8; }
+  .badge-err { background: rgba(239,68,68,0.2);  color: #f87171; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .charts-grid, .charts-grid-3 { grid-template-columns: 1fr; }
+    .subjects-grid { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 UPSC PDF Dataset Dashboard</h1>
+  <p>Extraction statistics across 20 subjects · 95 PDFs · Generated from metadata checkpoints</p>
+</div>
+
+<div class="page">
+
+  <!-- KPI Row -->
+  <div class="section-title">Overall Totals</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Total PDFs</div>
+      <div class="kpi-value">95</div>
+      <div class="kpi-sub">across 20 subjects</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Pages</div>
+      <div class="kpi-value">14,633</div>
+      <div class="kpi-sub">text: 11,427 · ocr: 3,206</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Size</div>
+      <div class="kpi-value">953.4 MB</div>
+      <div class="kpi-sub">on-disk PDF size</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Chunks</div>
+      <div class="kpi-value">23,634</div>
+      <div class="kpi-sub">~512 tokens each</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Raw Characters</div>
+      <div class="kpi-value">30.6 MB</div>
+      <div class="kpi-sub">before cleaning</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Clean Characters</div>
+      <div class="kpi-value">29.5 MB</div>
+      <div class="kpi-sub">retention: 96.2%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Failed Pages</div>
+      <div class="kpi-value" style="">0</div>
+      <div class="kpi-sub">✓ all pages ok</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Processing Time</div>
+      <div class="kpi-value">205m</div>
+      <div class="kpi-sub">12326 seconds total</div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="section-title">Distribution</div>
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-title">Pages by Subject</div>
+      <div class="chart-wrap"><canvas id="chartPages"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Size (MB) by Subject</div>
+      <div class="chart-wrap"><canvas id="chartSize"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="charts-grid-3">
+    <div class="card">
+      <div class="card-title">Extraction Strategy (Total Pages)</div>
+      <div class="chart-wrap-sm"><canvas id="chartStrategy"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Chunks by Subject</div>
+      <div class="chart-wrap-sm"><canvas id="chartChunks"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">PDF Count by Subject</div>
+      <div class="chart-wrap-sm"><canvas id="chartPdfs"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Subject Cards -->
+  <div class="section-title">Subject Breakdown</div>
+  <div class="subjects-grid">
+    
+        <div class="card subject-card" data-subject="Art">
+          <div class="card-header">
+            <div class="subject-title">Art</div>
+            <div class="subject-meta">4 PDFs &nbsp;·&nbsp; 39.3 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">486</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">635</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.991</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">99.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">14 <span class="pct">(3%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">37s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 4 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">Introduction to Indian Art  _.pdf</td>
+              <td class="num">146</td>
+              <td class="num">21.6 MB</td>
+              <td class="num">151</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.986</td>
+              <td class="num" style="color:#10b981">98.6%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Class_XII_Heritage_Craft_-_Craft_Traditions_of_India.pdf</td>
+              <td class="num">133</td>
+              <td class="num">9.4 MB</td>
+              <td class="num">179</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.983</td>
+              <td class="num" style="color:#10b981">99.6%</td>
+              <td class="num"><span class="badge badge-ocr">12 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Heritage-Crafts.pdf</td>
+              <td class="num">125</td>
+              <td class="num">5.1 MB</td>
+              <td class="num">137</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#10b981">98.7%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">art_and_culture.pdf</td>
+              <td class="num">82</td>
+              <td class="num">3.2 MB</td>
+              <td class="num">168</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Biology">
+          <div class="card-header">
+            <div class="subject-title">Biology</div>
+            <div class="subject-meta">2 PDFs &nbsp;·&nbsp; 37.6 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">656</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">838</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.991</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">99.6%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">345 <span class="pct">(53%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">521s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 2 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Biology.pdf</td>
+              <td class="num">345</td>
+              <td class="num">26.7 MB</td>
+              <td class="num">439</td>
+              <td class="num" style="color:#10b981;font-weight:600">1.000</td>
+              <td class="num" style="color:#10b981">99.7%</td>
+              <td class="num"><span class="badge badge-ocr">345 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Biology.pdf</td>
+              <td class="num">311</td>
+              <td class="num">10.9 MB</td>
+              <td class="num">399</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.982</td>
+              <td class="num" style="color:#10b981">99.5%</td>
+              <td class="num"></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Chemistry">
+          <div class="card-header">
+            <div class="subject-title">Chemistry</div>
+            <div class="subject-meta">4 PDFs &nbsp;·&nbsp; 43.3 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">888</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">1,441</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.985</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">98.9%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">680 <span class="pct">(77%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">1923s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 4 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Chemistry-Part-1.pdf</td>
+              <td class="num">286</td>
+              <td class="num">15.0 MB</td>
+              <td class="num">410</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.980</td>
+              <td class="num" style="color:#10b981">99.5%</td>
+              <td class="num"><span class="badge badge-ocr">255 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Chemistry-Part-1.pdf</td>
+              <td class="num">254</td>
+              <td class="num">12.4 MB</td>
+              <td class="num">481</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.992</td>
+              <td class="num" style="color:#10b981">99.4%</td>
+              <td class="num"><span class="badge badge-ocr">254 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Chemistry-Part-2.pdf</td>
+              <td class="num">186</td>
+              <td class="num">8.6 MB</td>
+              <td class="num">244</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.969</td>
+              <td class="num" style="color:#10b981">95.6%</td>
+              <td class="num"><span class="badge badge-ocr">9 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Chemistry-Part-2.pdf</td>
+              <td class="num">162</td>
+              <td class="num">7.3 MB</td>
+              <td class="num">306</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.7%</td>
+              <td class="num"><span class="badge badge-ocr">162 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="DM">
+          <div class="card-header">
+            <div class="subject-title">DM</div>
+            <div class="subject-meta">1 PDF &nbsp;·&nbsp; 2.8 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">64</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">125</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.985</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#ef4444">0.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">2 <span class="pct">(3%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">12s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 1 PDF</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">disaster-management.pdf</td>
+              <td class="num">64</td>
+              <td class="num">2.8 MB</td>
+              <td class="num">125</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.985</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Economics">
+          <div class="card-header">
+            <div class="subject-title">Economics</div>
+            <div class="subject-meta">9 PDFs &nbsp;·&nbsp; 58.0 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">1,176</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">2,183</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.986</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#f59e0b">94.3%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">118 <span class="pct">(10%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">405s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 9 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">2150807169d63be-economy-part-2.pdf</td>
+              <td class="num">238</td>
+              <td class="num">7.0 MB</td>
+              <td class="num">491</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.987</td>
+              <td class="num" style="color:#f59e0b">91.8%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">2149807169dbd6f-economy-part-1.pdf</td>
+              <td class="num">197</td>
+              <td class="num">13.9 MB</td>
+              <td class="num">394</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.990</td>
+              <td class="num" style="color:#f59e0b">92.4%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">21528071699ca92-economy-part-4.pdf</td>
+              <td class="num">151</td>
+              <td class="num">12.0 MB</td>
+              <td class="num">280</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.987</td>
+              <td class="num" style="color:#f59e0b">92.2%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">21518071693325c-economy-part-3.pdf</td>
+              <td class="num">141</td>
+              <td class="num">11.5 MB</td>
+              <td class="num">282</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.989</td>
+              <td class="num" style="color:#f59e0b">92.3%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Economics-Part-1.pdf</td>
+              <td class="num">106</td>
+              <td class="num">2.4 MB</td>
+              <td class="num">168</td>
+              <td class="num" style="color:#f59e0b;font-weight:600">0.946</td>
+              <td class="num" style="color:#10b981">98.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Economics-Part-2.pdf</td>
+              <td class="num">106</td>
+              <td class="num">2.7 MB</td>
+              <td class="num">177</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.998</td>
+              <td class="num" style="color:#10b981">99.3%</td>
+              <td class="num"><span class="badge badge-ocr">106 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-10-Economics.pdf</td>
+              <td class="num">93</td>
+              <td class="num">1.9 MB</td>
+              <td class="num">162</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.991</td>
+              <td class="num" style="color:#10b981">99.4%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">[Hindi (auto-generated)] How Did They Track Khamenei [DownSub.com].pdf</td>
+              <td class="num">93</td>
+              <td class="num">1.9 MB</td>
+              <td class="num">162</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.991</td>
+              <td class="num" style="color:#10b981">99.4%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">economics class 9.pdf</td>
+              <td class="num">51</td>
+              <td class="num">4.8 MB</td>
+              <td class="num">67</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.998</td>
+              <td class="num" style="color:#10b981">99.1%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Env">
+          <div class="card-header">
+            <div class="subject-title">Env</div>
+            <div class="subject-meta">3 PDFs &nbsp;·&nbsp; 18.6 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">487</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">808</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.982</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#f59e0b">91.3%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">12 <span class="pct">(2%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">162s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 3 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">2154807169a2d30-environment-part-2-compressed.pdf</td>
+              <td class="num">213</td>
+              <td class="num">6.9 MB</td>
+              <td class="num">391</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.985</td>
+              <td class="num" style="color:#f59e0b">92.1%</td>
+              <td class="num"><span class="badge badge-ocr">4 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">215380716924a44-environment-part-1-compressed.pdf</td>
+              <td class="num">171</td>
+              <td class="num">6.4 MB</td>
+              <td class="num">289</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.981</td>
+              <td class="num" style="color:#f59e0b">91.4%</td>
+              <td class="num"><span class="badge badge-ocr">4 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">215580716985192-environment-part-3-compressed.pdf</td>
+              <td class="num">103</td>
+              <td class="num">5.3 MB</td>
+              <td class="num">128</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.981</td>
+              <td class="num" style="color:#f59e0b">88.9%</td>
+              <td class="num"><span class="badge badge-ocr">4 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Essay">
+          <div class="card-header">
+            <div class="subject-title">Essay</div>
+            <div class="subject-meta">1 PDF &nbsp;·&nbsp; 16.1 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">102</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">202</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.983</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#ef4444">0.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">2 <span class="pct">(2%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">31s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 1 PDF</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">Essay.pdf</td>
+              <td class="num">102</td>
+              <td class="num">16.1 MB</td>
+              <td class="num">202</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.983</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Ethics">
+          <div class="card-header">
+            <div class="subject-title">Ethics</div>
+            <div class="subject-meta">3 PDFs &nbsp;·&nbsp; 12.9 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">347</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">671</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.988</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#ef4444">0.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">6 <span class="pct">(2%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">74s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 3 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">ethics-part-3.pdf</td>
+              <td class="num">144</td>
+              <td class="num">5.0 MB</td>
+              <td class="num">280</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.989</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">ethics-part-2.pdf</td>
+              <td class="num">139</td>
+              <td class="num">5.1 MB</td>
+              <td class="num">266</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.990</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">disaster-management.pdf</td>
+              <td class="num">64</td>
+              <td class="num">2.8 MB</td>
+              <td class="num">125</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.985</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Geography">
+          <div class="card-header">
+            <div class="subject-title">Geography</div>
+            <div class="subject-meta">16 PDFs &nbsp;·&nbsp; 150.5 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">1,897</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">2,860</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.989</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">95.4%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">281 <span class="pct">(15%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">649s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 16 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-10-Geography.pdf</td>
+              <td class="num">197</td>
+              <td class="num">8.1 MB</td>
+              <td class="num">313</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.988</td>
+              <td class="num" style="color:#10b981">99.6%</td>
+              <td class="num"><span class="badge badge-ocr">193 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">207580716937556-geography-part-4 (1).pdf</td>
+              <td class="num">173</td>
+              <td class="num">6.0 MB</td>
+              <td class="num">274</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.991</td>
+              <td class="num" style="color:#f59e0b">91.1%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">207580716937556-geography-part-4.pdf</td>
+              <td class="num">173</td>
+              <td class="num">6.0 MB</td>
+              <td class="num">274</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.991</td>
+              <td class="num" style="color:#f59e0b">91.1%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">207480716954e29-geography-part-3.pdf</td>
+              <td class="num">154</td>
+              <td class="num">5.9 MB</td>
+              <td class="num">236</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.993</td>
+              <td class="num" style="color:#f59e0b">91.1%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Fundamental of Physical Geography (Class XI) 2.pdf</td>
+              <td class="num">137</td>
+              <td class="num">6.0 MB</td>
+              <td class="num">243</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.998</td>
+              <td class="num" style="color:#10b981">98.5%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Prelims PYQ (2011-2025).pdf</td>
+              <td class="num">137</td>
+              <td class="num">6.0 MB</td>
+              <td class="num">243</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.998</td>
+              <td class="num" style="color:#10b981">98.5%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">207280716924ed8-geography-part-1.pdf</td>
+              <td class="num">136</td>
+              <td class="num">6.6 MB</td>
+              <td class="num">248</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.992</td>
+              <td class="num" style="color:#f59e0b">90.6%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">India People and Economy (Class XII).pdf</td>
+              <td class="num">126</td>
+              <td class="num">6.3 MB</td>
+              <td class="num">164</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.984</td>
+              <td class="num" style="color:#10b981">98.1%</td>
+              <td class="num"><span class="badge badge-ocr">3 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Practical Work in Geography Part 1.pdf</td>
+              <td class="num">105</td>
+              <td class="num">7.0 MB</td>
+              <td class="num">106</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.995</td>
+              <td class="num" style="color:#10b981">97.1%</td>
+              <td class="num"><span class="badge badge-ocr">3 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Fundamentals of Human Geography (Class XII) 1.pdf</td>
+              <td class="num">93</td>
+              <td class="num">13.4 MB</td>
+              <td class="num">135</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.973</td>
+              <td class="num" style="color:#10b981">96.5%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Copy of our environmemnt class 7 - Copy.pdf</td>
+              <td class="num">89</td>
+              <td class="num">26.7 MB</td>
+              <td class="num">122</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.991</td>
+              <td class="num" style="color:#10b981">99.3%</td>
+              <td class="num"><span class="badge badge-ocr">4 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">social science class 8.pdf</td>
+              <td class="num">84</td>
+              <td class="num">14.7 MB</td>
+              <td class="num">91</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#10b981">98.6%</td>
+              <td class="num"><span class="badge badge-ocr">3 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">India Physical Environment (Class XI) 2.pdf</td>
+              <td class="num">83</td>
+              <td class="num">5.8 MB</td>
+              <td class="num">130</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#10b981">98.9%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Practical Work in Geography Part 2.pdf</td>
+              <td class="num">77</td>
+              <td class="num">4.2 MB</td>
+              <td class="num">92</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.969</td>
+              <td class="num" style="color:#10b981">97.4%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Geography.pdf</td>
+              <td class="num">69</td>
+              <td class="num">23.1 MB</td>
+              <td class="num">88</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">98.8%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-9-Geography-1.pdf</td>
+              <td class="num">64</td>
+              <td class="num">4.8 MB</td>
+              <td class="num">101</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.963</td>
+              <td class="num" style="color:#10b981">99.4%</td>
+              <td class="num"><span class="badge badge-ocr">64 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Governance">
+          <div class="card-header">
+            <div class="subject-title">Governance</div>
+            <div class="subject-meta">1 PDF &nbsp;·&nbsp; 9.9 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">133</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">258</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.986</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#ef4444">0.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">2 <span class="pct">(2%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">29s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 1 PDF</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">governance.pdf</td>
+              <td class="num">133</td>
+              <td class="num">9.9 MB</td>
+              <td class="num">258</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.986</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="History">
+          <div class="card-header">
+            <div class="subject-title">History</div>
+            <div class="subject-meta">13 PDFs &nbsp;·&nbsp; 124.2 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">2,091</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">3,264</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.986</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">96.3%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">404 <span class="pct">(19%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">5197s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 13 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-History.pdf</td>
+              <td class="num">260</td>
+              <td class="num">3.6 MB</td>
+              <td class="num">317</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.972</td>
+              <td class="num" style="color:#10b981">99.0%</td>
+              <td class="num"><span class="badge badge-ocr">224 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">2071807169ef466-modern-indian-history-part-1.pdf</td>
+              <td class="num">226</td>
+              <td class="num">4.2 MB</td>
+              <td class="num">563</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.996</td>
+              <td class="num" style="color:#f59e0b">93.6%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-10-History.pdf</td>
+              <td class="num">196</td>
+              <td class="num">7.0 MB</td>
+              <td class="num">284</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">98.9%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">class 9 abc.pdf</td>
+              <td class="num">191</td>
+              <td class="num">29.8 MB</td>
+              <td class="num">253</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.994</td>
+              <td class="num" style="color:#10b981">98.9%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-History-Part-3.pdf</td>
+              <td class="num">178</td>
+              <td class="num">11.7 MB</td>
+              <td class="num">286</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.984</td>
+              <td class="num" style="color:#10b981">99.2%</td>
+              <td class="num"><span class="badge badge-ocr">164 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">world-history-part-2.pdf</td>
+              <td class="num">178</td>
+              <td class="num">5.0 MB</td>
+              <td class="num">344</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#f59e0b">93.1%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Copy of our past class 7 social science.pdf</td>
+              <td class="num">170</td>
+              <td class="num">15.7 MB</td>
+              <td class="num">175</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.985</td>
+              <td class="num" style="color:#10b981">97.9%</td>
+              <td class="num"><span class="badge badge-ocr">3 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">History6.pdf</td>
+              <td class="num">150</td>
+              <td class="num">8.7 MB</td>
+              <td class="num">151</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.3%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-History-Part-2.pdf</td>
+              <td class="num">146</td>
+              <td class="num">12.5 MB</td>
+              <td class="num">222</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#10b981">98.9%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-History-Part-1 (1).pdf</td>
+              <td class="num">117</td>
+              <td class="num">6.4 MB</td>
+              <td class="num">172</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.992</td>
+              <td class="num" style="color:#10b981">99.0%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">OUR PAST PART 2 CLASS 8 SOCIAL SCIENCE.pdf</td>
+              <td class="num">105</td>
+              <td class="num">12.6 MB</td>
+              <td class="num">114</td>
+              <td class="num" style="color:#f59e0b;font-weight:600">0.911</td>
+              <td class="num" style="color:#f59e0b">92.3%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">world-history-part-1.pdf</td>
+              <td class="num">100</td>
+              <td class="num">4.0 MB</td>
+              <td class="num">211</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.996</td>
+              <td class="num" style="color:#f59e0b">93.1%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">23218071691f251-modern-indian-history-part-2.pdf</td>
+              <td class="num">74</td>
+              <td class="num">2.8 MB</td>
+              <td class="num">172</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.993</td>
+              <td class="num" style="color:#f59e0b">92.8%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="IR">
+          <div class="card-header">
+            <div class="subject-title">IR</div>
+            <div class="subject-meta">2 PDFs &nbsp;·&nbsp; 20.2 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">293</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">522</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.982</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#f59e0b">92.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">4 <span class="pct">(1%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">68s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 2 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">International-Relations-part-1.pdf</td>
+              <td class="num">163</td>
+              <td class="num">11.7 MB</td>
+              <td class="num">288</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.983</td>
+              <td class="num" style="color:#f59e0b">91.9%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">International-Relations-part-2.pdf</td>
+              <td class="num">130</td>
+              <td class="num">8.5 MB</td>
+              <td class="num">234</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.982</td>
+              <td class="num" style="color:#f59e0b">92.2%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Physics">
+          <div class="card-header">
+            <div class="subject-title">Physics</div>
+            <div class="subject-meta">4 PDFs &nbsp;·&nbsp; 24.8 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">960</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">1,817</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.984</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">98.9%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">398 <span class="pct">(41%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">996s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 4 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Physics-Part-1.pdf</td>
+              <td class="num">291</td>
+              <td class="num">4.4 MB</td>
+              <td class="num">538</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.963</td>
+              <td class="num" style="color:#10b981">98.2%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Physics-Part-2.pdf</td>
+              <td class="num">254</td>
+              <td class="num">4.5 MB</td>
+              <td class="num">451</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.977</td>
+              <td class="num" style="color:#10b981">98.3%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Physics-Part-1.pdf</td>
+              <td class="num">234</td>
+              <td class="num">9.9 MB</td>
+              <td class="num">475</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.998</td>
+              <td class="num" style="color:#10b981">99.7%</td>
+              <td class="num"><span class="badge badge-ocr">216 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Physics-Part-2.pdf</td>
+              <td class="num">181</td>
+              <td class="num">5.9 MB</td>
+              <td class="num">353</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.5%</td>
+              <td class="num"><span class="badge badge-ocr">181 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Polity">
+          <div class="card-header">
+            <div class="subject-title">Polity</div>
+            <div class="subject-meta">15 PDFs &nbsp;·&nbsp; 170.8 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">2,179</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">3,467</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.989</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">95.3%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">191 <span class="pct">(9%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">531s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 15 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Political-Science-Part-1.pdf</td>
+              <td class="num">244</td>
+              <td class="num">3.8 MB</td>
+              <td class="num">326</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.995</td>
+              <td class="num" style="color:#10b981">98.8%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Political-Science-Part-2.pdf</td>
+              <td class="num">197</td>
+              <td class="num">28.4 MB</td>
+              <td class="num">237</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.987</td>
+              <td class="num" style="color:#10b981">97.1%</td>
+              <td class="num"><span class="badge badge-ocr">4 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">2067807169b87f1-polity-part-6.pdf</td>
+              <td class="num">180</td>
+              <td class="num">11.3 MB</td>
+              <td class="num">394</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.989</td>
+              <td class="num" style="color:#f59e0b">92.4%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Political-Science-Part-2-1.pdf</td>
+              <td class="num">160</td>
+              <td class="num">6.6 MB</td>
+              <td class="num">180</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.990</td>
+              <td class="num" style="color:#10b981">98.5%</td>
+              <td class="num"><span class="badge badge-ocr">158 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">206380716999b4d-polity-part-2.pdf</td>
+              <td class="num">159</td>
+              <td class="num">20.7 MB</td>
+              <td class="num">264</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.989</td>
+              <td class="num" style="color:#f59e0b">91.2%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Political-Science-Part-1.pdf</td>
+              <td class="num">152</td>
+              <td class="num">3.1 MB</td>
+              <td class="num">231</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.0%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">20668071693596a-polity-part-5.pdf</td>
+              <td class="num">142</td>
+              <td class="num">9.3 MB</td>
+              <td class="num">295</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.990</td>
+              <td class="num" style="color:#f59e0b">92.6%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">206480716961677-polity-part-3.pdf</td>
+              <td class="num">140</td>
+              <td class="num">6.5 MB</td>
+              <td class="num">317</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.992</td>
+              <td class="num" style="color:#f59e0b">92.2%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">SOCIAL SCIENCE AND POLITICAL LIFE PART 3.pdf</td>
+              <td class="num">129</td>
+              <td class="num">16.4 MB</td>
+              <td class="num">169</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.1%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">social science 7.pdf</td>
+              <td class="num">124</td>
+              <td class="num">21.9 MB</td>
+              <td class="num">132</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.992</td>
+              <td class="num" style="color:#10b981">99.7%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">social science demo part 1.pdf</td>
+              <td class="num">123</td>
+              <td class="num">10.4 MB</td>
+              <td class="num">216</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.3%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-10-Political-Science.pdf</td>
+              <td class="num">114</td>
+              <td class="num">5.1 MB</td>
+              <td class="num">155</td>
+              <td class="num" style="color:#f59e0b;font-weight:600">0.939</td>
+              <td class="num" style="color:#10b981">97.9%</td>
+              <td class="num"><span class="badge badge-ocr">10 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">2062807169f28f1-polity-part-1.pdf</td>
+              <td class="num">109</td>
+              <td class="num">5.1 MB</td>
+              <td class="num">234</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.989</td>
+              <td class="num" style="color:#f59e0b">92.2%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">206580716906333-polity-part-4.pdf</td>
+              <td class="num">106</td>
+              <td class="num">9.7 MB</td>
+              <td class="num">200</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.990</td>
+              <td class="num" style="color:#f59e0b">92.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Polity6.pdf</td>
+              <td class="num">100</td>
+              <td class="num">12.5 MB</td>
+              <td class="num">117</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.7%</td>
+              <td class="num"><span class="badge badge-ocr">4 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Post Independence">
+          <div class="card-header">
+            <div class="subject-title">Post Independence</div>
+            <div class="subject-meta">1 PDF &nbsp;·&nbsp; 2.7 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">58</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">139</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.993</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#f59e0b">93.1%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">2 <span class="pct">(3%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">15s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 1 PDF</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">post-independence-india.pdf</td>
+              <td class="num">58</td>
+              <td class="num">2.7 MB</td>
+              <td class="num">139</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.993</td>
+              <td class="num" style="color:#f59e0b">93.1%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Science">
+          <div class="card-header">
+            <div class="subject-title">Science</div>
+            <div class="subject-meta">7 PDFs &nbsp;·&nbsp; 127.0 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">1,611</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">2,331</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.991</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">99.4%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">468 <span class="pct">(29%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">1024s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 7 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-10-Science.pdf</td>
+              <td class="num">282</td>
+              <td class="num">15.5 MB</td>
+              <td class="num">365</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.9%</td>
+              <td class="num"><span class="badge badge-ocr">282 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">science class 8.pdf</td>
+              <td class="num">265</td>
+              <td class="num">32.0 MB</td>
+              <td class="num">384</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#10b981">99.3%</td>
+              <td class="num"></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">Copy of science class 7.pdf</td>
+              <td class="num">248</td>
+              <td class="num">21.9 MB</td>
+              <td class="num">335</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#10b981">99.1%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">class 9 science.pdf</td>
+              <td class="num">225</td>
+              <td class="num">29.4 MB</td>
+              <td class="num">378</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.992</td>
+              <td class="num" style="color:#10b981">99.4%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-10-Science-Exemplar-Problems-1.pdf</td>
+              <td class="num">223</td>
+              <td class="num">4.2 MB</td>
+              <td class="num">376</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.968</td>
+              <td class="num" style="color:#10b981">98.9%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-9-Science-Exemplar-Problems.pdf</td>
+              <td class="num">192</td>
+              <td class="num">7.6 MB</td>
+              <td class="num">245</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.988</td>
+              <td class="num" style="color:#10b981">99.6%</td>
+              <td class="num"><span class="badge badge-ocr">179 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">science class 6.pdf</td>
+              <td class="num">176</td>
+              <td class="num">16.4 MB</td>
+              <td class="num">248</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.994</td>
+              <td class="num" style="color:#10b981">99.2%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Security">
+          <div class="card-header">
+            <div class="subject-title">Security</div>
+            <div class="subject-meta">2 PDFs &nbsp;·&nbsp; 22.6 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">268</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">527</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.987</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#ef4444">0.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">4 <span class="pct">(1%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">61s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 2 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">Security-part-1.pdf</td>
+              <td class="num">141</td>
+              <td class="num">11.2 MB</td>
+              <td class="num">272</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.986</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">security-part-2.pdf</td>
+              <td class="num">127</td>
+              <td class="num">11.5 MB</td>
+              <td class="num">255</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.987</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Social Justice">
+          <div class="card-header">
+            <div class="subject-title">Social Justice</div>
+            <div class="subject-meta">1 PDF &nbsp;·&nbsp; 5.0 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">150</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">263</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.985</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#ef4444">0.0%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">2 <span class="pct">(1%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">32s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 1 PDF</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">social-justice.pdf</td>
+              <td class="num">150</td>
+              <td class="num">5.0 MB</td>
+              <td class="num">263</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.985</td>
+              <td class="num" style="color:#ef4444">0.0%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Society">
+          <div class="card-header">
+            <div class="subject-title">Society</div>
+            <div class="subject-meta">2 PDFs &nbsp;·&nbsp; 45.7 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">252</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">504</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.990</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#f59e0b">92.3%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">4 <span class="pct">(2%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">65s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 2 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">society-part-1.pdf</td>
+              <td class="num">146</td>
+              <td class="num">22.4 MB</td>
+              <td class="num">302</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.990</td>
+              <td class="num" style="color:#f59e0b">92.3%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">society-part-2.pdf</td>
+              <td class="num">106</td>
+              <td class="num">23.3 MB</td>
+              <td class="num">202</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.991</td>
+              <td class="num" style="color:#f59e0b">92.2%</td>
+              <td class="num"><span class="badge badge-ocr">2 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+        <div class="card subject-card" data-subject="Sociology">
+          <div class="card-header">
+            <div class="subject-title">Sociology</div>
+            <div class="subject-meta">4 PDFs &nbsp;·&nbsp; 21.5 MB</div>
+          </div>
+          <div class="subject-stats">
+            <div class="stat-pill">
+              <div class="pill-label">Pages</div>
+              <div class="pill-value">535</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Chunks</div>
+              <div class="pill-value">779</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Quality</div>
+              <div class="pill-value" style="color:#10b981">0.983</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Retention</div>
+              <div class="pill-value" style="color:#10b981">99.3%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">OCR pages</div>
+              <div class="pill-value">267 <span class="pct">(50%)</span></div>
+            </div>
+            <div class="stat-pill">
+              <div class="pill-label">Proc time</div>
+              <div class="pill-value">494s</div>
+            </div>
+          </div>
+          <details class="pdf-details">
+            <summary>Show 4 PDFs</summary>
+            <table class="pdf-table">
+              <thead><tr>
+                <th>File</th><th>Pages</th><th>Size</th>
+                <th>Chunks</th><th>Quality</th><th>Retention</th><th>Flags</th>
+              </tr></thead>
+              <tbody>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Sociology-Part-2.pdf</td>
+              <td class="num">165</td>
+              <td class="num">7.0 MB</td>
+              <td class="num">244</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.997</td>
+              <td class="num" style="color:#10b981">99.0%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-12-Sociology-Part-1.pdf</td>
+              <td class="num">162</td>
+              <td class="num">10.7 MB</td>
+              <td class="num">227</td>
+              <td class="num" style="color:#f59e0b;font-weight:600">0.935</td>
+              <td class="num" style="color:#10b981">99.6%</td>
+              <td class="num"><span class="badge badge-ocr">162 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Sociology-Part-1 (1).pdf</td>
+              <td class="num">104</td>
+              <td class="num">1.3 MB</td>
+              <td class="num">150</td>
+              <td class="num" style="color:#10b981;font-weight:600">0.999</td>
+              <td class="num" style="color:#10b981">99.0%</td>
+              <td class="num"><span class="badge badge-ocr">1 OCR</span></td>
+            </tr>
+            <tr>
+              <td class="pdf-name">NCERT-Class-11-Sociology-Part-2.pdf</td>
+              <td class="num">104</td>
+              <td class="num">2.5 MB</td>
+              <td class="num">158</td>
+              <td class="num" style="color:#10b981;font-weight:600">1.000</td>
+              <td class="num" style="color:#10b981">99.7%</td>
+              <td class="num"><span class="badge badge-ocr">103 OCR</span></td>
+            </tr></tbody>
+            </table>
+          </details>
+        </div>
+  </div>
+
+</div>
+
+<script>
+const LABELS  = ["Art", "Biology", "Chemistry", "DM", "Economics", "Env", "Essay", "Ethics", "Geography", "Governance", "History", "IR", "Physics", "Polity", "Post Independence", "Science", "Security", "Social Justice", "Society", "Sociology"];
+const PAGES   = [486, 656, 888, 64, 1176, 487, 102, 347, 1897, 133, 2091, 293, 960, 2179, 58, 1611, 268, 150, 252, 535];
+const SIZES   = [39.3, 37.6, 43.3, 2.8, 58.0, 18.6, 16.1, 12.9, 150.5, 9.9, 124.2, 20.2, 24.8, 170.8, 2.7, 127.0, 22.6, 5.0, 45.7, 21.5];
+const CHUNKS  = [635, 838, 1441, 125, 2183, 808, 202, 671, 2860, 258, 3264, 522, 1817, 3467, 139, 2331, 527, 263, 504, 779];
+const PDFS    = [4, 2, 4, 1, 9, 3, 1, 3, 16, 1, 13, 2, 4, 15, 1, 7, 2, 1, 2, 4];
+
+const PALETTE = [
+  '#6366f1','#22d3ee','#10b981','#f59e0b','#ef4444',
+  '#a78bfa','#34d399','#fbbf24','#f87171','#60a5fa',
+  '#e879f9','#4ade80'
+];
+
+const baseOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+    tooltip: { backgroundColor: '#1e293b', borderColor: '#334155', borderWidth: 1,
+                titleColor: '#e2e8f0', bodyColor: '#94a3b8' }
+  },
+  scales: {
+    x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+    y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#273346' } }
+  }
+};
+
+function barChart(id, labels, data, label, color) {
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label, data, backgroundColor: color || PALETTE,
+                    borderRadius: 6, borderSkipped: false }]
+    },
+    options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: false } } }
+  });
+}
+
+barChart('chartPages',  LABELS, PAGES,  'Pages',    '#6366f1');
+barChart('chartSize',   LABELS, SIZES,  'Size (MB)','#22d3ee');
+barChart('chartChunks', LABELS, CHUNKS, 'Chunks',   '#10b981');
+barChart('chartPdfs',   LABELS, PDFS,   'PDFs',     '#f59e0b');
+
+// Strategy donut
+new Chart(document.getElementById('chartStrategy'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Text Extraction', 'OCR', 'Failed'],
+    datasets: [{
+      data: [11427, 3206, 0],
+      backgroundColor: ['#10b981', '#6366f1', '#ef4444'],
+      borderWidth: 2,
+      borderColor: '#1e293b'
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 }, padding: 12 } },
+      tooltip: { backgroundColor: '#1e293b', borderColor: '#334155', borderWidth: 1,
+                  titleColor: '#e2e8f0', bodyColor: '#94a3b8' }
+    }
+  }
+});
+</script>
+</body>
+</html>

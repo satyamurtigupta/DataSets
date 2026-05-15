@@ -1,0 +1,15 @@
+{
+  "source_file": "206480716961677-polity-part-3.pdf",
+  "subject": "Polity",
+  "pages_total": 140,
+  "pages_text": 138,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 317,
+  "mean_quality_score": 0.9916,
+  "raw_chars": 464269,
+  "cleaned_chars": 428036,
+  "char_retention_pct": 92.2,
+  "processing_time_sec": 32.1,
+  "errors": []
+}

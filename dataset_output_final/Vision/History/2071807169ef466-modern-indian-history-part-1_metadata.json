@@ -1,0 +1,15 @@
+{
+  "source_file": "2071807169ef466-modern-indian-history-part-1.pdf",
+  "subject": "History",
+  "pages_total": 226,
+  "pages_text": 224,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 563,
+  "mean_quality_score": 0.9964,
+  "raw_chars": 883434,
+  "cleaned_chars": 827104,
+  "char_retention_pct": 93.62,
+  "processing_time_sec": 20.88,
+  "errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "source_file": "215380716924a44-environment-part-1-compressed.pdf",
+  "subject": "Env",
+  "pages_total": 171,
+  "pages_text": 167,
+  "pages_ocr": 4,
+  "pages_failed": 0,
+  "chunks_generated": 289,
+  "mean_quality_score": 0.9814,
+  "raw_chars": 521041,
+  "cleaned_chars": 476285,
+  "char_retention_pct": 91.41,
+  "processing_time_sec": 58.14,
+  "errors": []
+}

@@ -1,0 +1,12 @@
+{
+  "source_file": "disaster-management.pdf",
+  "subject": "Ethics",
+  "pages_total": 64,
+  "pages_text": 62,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 125,
+  "mean_quality_score": 0.9846,
+  "processing_time_sec": 10.57,
+  "errors": []
+}

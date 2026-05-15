@@ -1,0 +1,15 @@
+{
+  "source_file": "21518071693325c-economy-part-3.pdf",
+  "subject": "Economics",
+  "pages_total": 141,
+  "pages_text": 139,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 282,
+  "mean_quality_score": 0.989,
+  "raw_chars": 474054,
+  "cleaned_chars": 437333,
+  "char_retention_pct": 92.25,
+  "processing_time_sec": 30.92,
+  "errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "source_file": "207580716937556-geography-part-4 (1).pdf",
+  "subject": "Geography",
+  "pages_total": 173,
+  "pages_text": 173,
+  "pages_ocr": 0,
+  "pages_failed": 0,
+  "chunks_generated": 274,
+  "mean_quality_score": 0.9911,
+  "raw_chars": 494543,
+  "cleaned_chars": 450472,
+  "char_retention_pct": 91.09,
+  "processing_time_sec": 2.11,
+  "errors": []
+}

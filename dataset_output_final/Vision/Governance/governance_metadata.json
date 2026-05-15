@@ -1,0 +1,12 @@
+{
+  "source_file": "governance.pdf",
+  "subject": "Governance",
+  "pages_total": 133,
+  "pages_text": 131,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 258,
+  "mean_quality_score": 0.9863,
+  "processing_time_sec": 29.29,
+  "errors": []
+}

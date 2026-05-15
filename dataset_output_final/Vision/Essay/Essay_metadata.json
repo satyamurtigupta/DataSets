@@ -1,0 +1,12 @@
+{
+  "source_file": "Essay.pdf",
+  "subject": "Essay",
+  "pages_total": 102,
+  "pages_text": 100,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 202,
+  "mean_quality_score": 0.9834,
+  "processing_time_sec": 30.58,
+  "errors": []
+}

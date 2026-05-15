@@ -1,0 +1,15 @@
+{
+  "source_file": "20668071693596a-polity-part-5.pdf",
+  "subject": "Polity",
+  "pages_total": 142,
+  "pages_text": 140,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 295,
+  "mean_quality_score": 0.9898,
+  "raw_chars": 495861,
+  "cleaned_chars": 459001,
+  "char_retention_pct": 92.57,
+  "processing_time_sec": 34.04,
+  "errors": []
+}

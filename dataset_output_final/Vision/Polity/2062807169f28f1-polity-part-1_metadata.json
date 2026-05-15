@@ -1,0 +1,15 @@
+{
+  "source_file": "2062807169f28f1-polity-part-1.pdf",
+  "subject": "Polity",
+  "pages_total": 109,
+  "pages_text": 107,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 234,
+  "mean_quality_score": 0.9892,
+  "raw_chars": 362897,
+  "cleaned_chars": 334760,
+  "char_retention_pct": 92.25,
+  "processing_time_sec": 26.27,
+  "errors": []
+}

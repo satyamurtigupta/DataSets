@@ -1,0 +1,15 @@
+{
+  "source_file": "International-Relations-part-1.pdf",
+  "subject": "IR",
+  "pages_total": 163,
+  "pages_text": 161,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 288,
+  "mean_quality_score": 0.9825,
+  "raw_chars": 512674,
+  "cleaned_chars": 470951,
+  "char_retention_pct": 91.86,
+  "processing_time_sec": 37.42,
+  "errors": []
+}

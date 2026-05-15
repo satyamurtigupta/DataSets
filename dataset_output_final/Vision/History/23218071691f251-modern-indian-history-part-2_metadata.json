@@ -1,0 +1,15 @@
+{
+  "source_file": "23218071691f251-modern-indian-history-part-2.pdf",
+  "subject": "History",
+  "pages_total": 74,
+  "pages_text": 72,
+  "pages_ocr": 2,
+  "pages_failed": 0,
+  "chunks_generated": 172,
+  "mean_quality_score": 0.993,
+  "raw_chars": 262487,
+  "cleaned_chars": 243538,
+  "char_retention_pct": 92.78,
+  "processing_time_sec": 7.16,
+  "errors": []
+}

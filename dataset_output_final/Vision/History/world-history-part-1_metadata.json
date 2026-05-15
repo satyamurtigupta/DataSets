@@ -1,0 +1,15 @@
+{
+  "source_file": "world-history-part-1.pdf",
+  "subject": "History",
+  "pages_total": 100,
+  "pages_text": 100,
+  "pages_ocr": 0,
+  "pages_failed": 0,
+  "chunks_generated": 211,
+  "mean_quality_score": 0.9957,
+  "raw_chars": 349505,
+  "cleaned_chars": 325278,
+  "char_retention_pct": 93.07,
+  "processing_time_sec": 1.38,
+  "errors": []
+}
