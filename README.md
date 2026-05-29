@@ -1,318 +1,918 @@
-# UPSC PDF Dataset Extractor
+# UPSC-Gemma2: Fine-tuning a Small Language Model for Civil Services Examination
 
-High-quality PDF → JSONL dataset extractor for **Gemma 2 SLM domain adaptation** on UPSC exam content. Handles all PDF types including scanned pages, Type3 symbol fonts, and corrupt font encodings, producing clean training data in two formats: continued pre-training (Stage 1) and instruction fine-tuning (Stage 2).
+## Project Overview
+
+This project builds a domain-adapted Small Language Model (SLM) based on **Google Gemma 2 2B** for the
+Union Public Service Commission (UPSC) Civil Services Examination — one of India's most competitive
+exams. The model is designed to answer both Prelims (multiple-choice) and Mains (long-form essay)
+questions with the accuracy and style expected at examiner level.
+
+The project covers the complete pipeline: raw PDF ingestion, text quality filtering, dataset
+construction, two-stage fine-tuning on Google Colab, and planned deployment as a mobile-ready
+inference model.
+
+**Model:** google/gemma-2-2b (2 billion parameters)
+**Fine-tuning method:** QLoRA (4-bit quantised Low-Rank Adaptation)
+**Training infrastructure:** Google Colab (T4 / A100 GPU)
+**Dataset size:** ~9,500 pretrain chunks + ~32,000 instruction pairs (Mains) + ~2,500 MCQ pairs
 
 ---
 
-## The Problem This Solves
+## Research Motivation
 
-Standard PDF extractors fail on UPSC/NCERT PDFs in two ways:
+Standard general-purpose LLMs (GPT-4, Gemini, Llama) perform poorly on UPSC questions because:
 
-| Corruption Type | Example | Root Cause |
-|----------------|---------|------------|
-| Repeated-char corruption | `IIIIlllluuuussstttrrraaa` | Bad ToUnicode font maps |
-| Symbol garbage | `✎ ☞ ✒ ♦ ☛` | Type3 custom symbol fonts |
+1. **Domain gap** — UPSC requires India-specific knowledge (Indian Constitution, NCERT curriculum,
+   government schemes, Indian history and geography) that is underrepresented in general pre-training
+   corpora.
+2. **Answer format gap** — UPSC Mains demands a structured answer style (assertive opening, numbered
+   sub-headings, word-limited conclusions with current relevance) that general models do not follow.
+3. **Vocabulary gap** — UPSC uses subject-specific vocabulary (Preamble, Directive Principles,
+   Westerlies, Peninsular Plateau) that must be absorbed before the model can reason about it.
 
-This script detects corruption **per page** and automatically routes affected pages to OCR (Tesseract), while extracting clean pages directly — giving the best quality with the least OCR overhead.
+This project addresses all three gaps through a two-stage training pipeline: Stage 1 injects domain
+vocabulary and knowledge from NCERT textbooks and VisionIAS study material; Stage 2 teaches
+the specific question-answer format required by UPSC examiners.
 
 ---
 
-## Installation
+## Directory Structure
 
-### Python Dependencies
-```bash
-cd $HOME/Downloads/DataSets
-python3 -m venv .venv
-source .venv/bin/activate
-pip install pymupdf pdfplumber pdf2image pillow pytesseract langdetect datasets
+```
+DataSets/
+├── upsc_pdfs/                          Source PDFs (1 GB, never delete)
+│   ├── Art/                            NCERT Art and Culture (36 MB)
+│   ├── Biology/                        NCERT Biology Class 11-12 (38 MB)
+│   ├── Chemistry/                      NCERT Chemistry (43 MB)
+│   ├── Economics/                      NCERT Economics (14 MB)
+│   ├── Geography/                      NCERT + VisionIAS Geography (126 MB)
+│   ├── History/                        NCERT History Class 6-12 (108 MB)
+│   ├── Physics/                        NCERT Physics (25 MB)
+│   ├── Polity/                         NCERT + VisionIAS Polity (108 MB)
+│   ├── Prelimns/                       UPSC PYQ compilations (75 MB)
+│   ├── Science/                        NCERT Science (127 MB)
+│   ├── Sociology/                      NCERT Sociology (22 MB)
+│   └── Vision/                         VisionIAS subject PDFs (307 MB)
+│
+├── scripts/                            All production pipeline scripts
+├── colab_training/                     Google Colab training notebooks
+├── dataset_output_final/combined/      All generated datasets (active files)
+├── env/                                API keys (.env file, never commit)
+├── HANDOFF_PLAN.md                     Full project briefing document
+└── README.md                           This file
 ```
 
-### System Dependencies (macOS)
+---
+
+## Active Datasets
+
+All datasets live in `dataset_output_final/combined/`. These are the files used for training.
+
+### Stage 1 — Domain Pretraining
+
+| File | Records | Size | Description |
+|------|---------|------|-------------|
+| `unified_pretrain_clean.jsonl` | 9,569 | 19 MB | Clean NCERT text chunks. Primary input for Stage 1 CPT. Passed 11 NLP quality checks. |
+
+### Stage 2A — Mains Question-Answer Training
+
+| File | Records | Size | Description |
+|------|---------|------|-------------|
+| `unified_sft_v3_clean.jsonl` | 30,183 | 48 MB | UPSC Mains Q+A pairs generated by LLM from NCERT chunks. Gemma chat format. |
+
+### Stage 2B — Prelims MCQ Training
+
+| File | Records | Size | Description |
+|------|---------|------|-------------|
+| `unified_mcq_training_clean.jsonl` | 2,496 | 4 MB | Merged MCQ training set. 100% quality checked. Alpaca format. |
+| `real_upsc_mcq_raw.jsonl` | 1,323 | 1.4 MB | Raw MCQs extracted from VisionIAS PDFs 2011-2025. Source file. |
+| `synthetic_mcq_raw.jsonl` | 21 | 32 KB | Synthetic MCQs generated via GPT-4o from NCERT. Generation not yet complete. |
+
+### Supporting Files
+
+| File | Description |
+|------|-------------|
+| `question_patterns.json` | LLM-analysed UPSC Mains question type patterns. Used by generate_sft_dataset.py. |
+| `sft_v3_progress.json` | Progress tracker for generate_sft_dataset.py. Allows resume without reprocessing. |
+| `synthetic_mcq_progress.json` | Progress tracker for generate_mcq_synthetic.py. |
+| `pretrain_audit_log.jsonl` | Per-chunk NLP audit results from pretrain_quality_check.py. |
+
+---
+
+## Dataset Record Formats
+
+### Pretrain chunk (unified_pretrain_clean.jsonl)
+
+Each record is a self-contained passage of text from an NCERT textbook. No conversation format —
+just clean domain prose. Used for continued pre-training where the model predicts the next token.
+
+```json
+{
+  "id": "history_ncert_class_11_history_0042",
+  "text": "The Mughal Empire was founded by Babur in 1526 after his victory at
+           the First Battle of Panipat. Babur defeated Ibrahim Lodi, the last
+           ruler of the Delhi Sultanate, using superior artillery and the
+           flanking tactic known as the tulughma...",
+  "subject": "History",
+  "source_file": "NCERT-Class-11-History.pdf",
+  "section_heading": "The Mughal Empire",
+  "word_count": 289,
+  "quality_score": 0.9982
+}
+```
+
+### Mains SFT record (unified_sft_v3_clean.jsonl)
+
+Each record is a complete question-answer pair in Gemma 2 chat format. The `text` field is
+pre-baked — the trainer reads it directly via `dataset_text_field="text"`.
+
+```json
+{
+  "id": "history_ncert_class_11_history_0042_sft1",
+  "subject": "History",
+  "q_type": "critically_examine",
+  "word_limit": 250,
+  "marks": 15,
+  "question": "Critically examine the military innovations of Babur and their role in
+               establishing Mughal supremacy in the Indian subcontinent.",
+  "answer_preview": "Babur's victory at Panipat in 1526 was not merely a military triumph but
+                     a technological revolution that permanently altered the nature of warfare...",
+  "text": "<start_of_turn>user\nCritically examine the military innovations of Babur...<end_of_turn>\n<start_of_turn>model\nBabur's victory at Panipat...<end_of_turn>"
+}
+```
+
+### MCQ record (unified_mcq_training_clean.jsonl — Alpaca format)
+
+Each record is an instruction-input-output triple. The Alpaca format is model-agnostic and does
+not embed any model-specific tokens, making it reusable across different base models.
+
+```json
+{
+  "id": "real_upsc_2019_q047_answer_mcq",
+  "instruction": "Answer the following UPSC Prelims question.",
+  "input": "Which of the following statements about the Chipko Movement is correct?\n\n(a) It was primarily an economic protest against timber contractors\n(b) It originated in Uttarakhand in the 1970s under Sunderlal Bahuguna\n(c) It was led by women protesting against domestic violence\n(d) It resulted in a complete ban on tree felling in India",
+  "question": "Which of the following statements about the Chipko Movement is correct?",
+  "answer": "b",
+  "explanation": "The correct answer is (b). The Chipko Movement originated in the Chamoli district
+                  of Uttarakhand in 1973. Women in villages hugged trees to prevent contractors
+                  from felling them. Sunderlal Bahuguna was a key leader who helped spread the
+                  movement nationally...",
+  "subject": "Environment",
+  "question_type": "single_correct",
+  "difficulty": "medium",
+  "exam": "UPSC_Prelims",
+  "format": "answer_mcq",
+  "source_ids": ["real_upsc_2019_q047"]
+}
+```
+
+---
+
+## Complete Pipeline
+
+The pipeline has five sequential stages. Each stage feeds the next.
+
+```
+STAGE 0 — Source PDFs
+upsc_pdfs/ (1 GB)
+    NCERT Class 6-12 textbooks (all subjects)
+    VisionIAS study material (Geography, History, Polity, Science)
+    UPSC PYQ compilations (Prelims MCQs 2011-2025)
+         |
+         v
+STAGE 1 — PDF Extraction
+pdf_extractor.py
+    Per-page strategy: PyMuPDF → PDFPlumber → Tesseract OCR
+    Output: unified_pretrain.jsonl (11,912 raw chunks)
+         |
+         v
+STAGE 2 — Pretrain Quality Filtering
+pretrain_quality_check.py
+    11 NLP checks: repetition, vocabulary, OCR noise, duplicates, boundary
+    Output: unified_pretrain_clean.jsonl (9,569 chunks — 80.3% pass rate)
+         |
+         +---------------------------+---------------------------+
+         |                           |                           |
+         v                           v                           v
+STAGE 3A — Mains Q+A          STAGE 3B — Synthetic MCQ   STAGE 3C — Real MCQ
+generate_sft_dataset.py        generate_mcq_synthetic.py   extract_real_mcq_from_pdfs.py
+LLM generates 5 Q+A per chunk  GPT-4o generates MCQs       Extracts from VisionIAS PDFs
+Output: unified_sft_v3.jsonl   Output: synthetic_mcq_raw   Output: real_upsc_mcq_raw
+         |                           |                           |
+         v                           v                           v
+STAGE 4 — SFT Quality Checks
+clean_sft_dataset.py (Mains)
+dataset_quality_check.py (MCQ — 3 structural checks)
+Output: unified_sft_v3_clean.jsonl
+        synthetic_mcq_sft_clean.jsonl
+        real_upsc_mcq_sft_clean.jsonl
+         |
+         v
+STAGE 5 — Merge MCQ
+merge_sft.py
+Output: unified_mcq_training_clean.jsonl (2,496 records, 100% quality)
+         |
+         v
+STAGE 6 — Model Training (Google Colab)
+Stage 1 CPT:  unified_pretrain_clean.jsonl   → gemma2_stage1/lora_adapter_stage1
+Stage 2A SFT: unified_sft_v3_clean.jsonl     → gemma2_stage2a/lora_adapter_stage2a
+Stage 2B SFT: unified_mcq_training_clean.jsonl → gemma2_stage2b/lora_adapter_stage2b
+```
+
+---
+
+## Scripts Reference
+
+### 1. pdf_extractor.py — PDF to Text Chunks
+
+**What it does in plain terms:**
+Reads NCERT and VisionIAS PDF files and converts them into clean text chunks suitable for model
+training. The challenge is that NCERT PDFs use non-standard fonts that cause standard PDF readers
+to produce garbage text. This script detects corruption per-page and automatically routes bad pages
+to OCR (optical character recognition) using Tesseract.
+
+**Per-page decision logic:**
+```
+For each page:
+  1. Detect font type (standard / Type3 / image-only)
+  2. If Type3 or image-only → send to Tesseract OCR directly
+  3. If standard font → extract with PyMuPDF → score quality
+     - Quality >= 0.60 → accept
+     - Quality < 0.60  → try PDFPlumber → if still bad → OCR fallback
+  4. All OCR pages are batched together → single Tesseract call per PDF
+```
+
+**Quality scoring formula:**
+```
+score = 0.40 * word_density    (are tokens real dictionary words?)
+      + 0.35 * symbol_score    (low dingbat / PUA character ratio?)
+      + 0.15 * repeat_score    (no character-repetition runs?)
+      + 0.10 * cid_score       (no (cid:N) font encoding leakage?)
+```
+
+**How to run:**
+
+```bash
+# All subjects at once
+python3 scripts/pdf_extractor.py upsc_pdfs/ --output dataset_output_final/
+
+# Single subject
+python3 scripts/pdf_extractor.py upsc_pdfs/History/ --output dataset_output_final/ --no-merge
+
+# After all subjects are done, merge into unified files
+python3 scripts/pdf_extractor.py --merge-only --output dataset_output_final/
+
+# Resume if interrupted
+python3 scripts/pdf_extractor.py upsc_pdfs/History/ --output dataset_output_final/ --resume
+
+# Force OCR on a specific PDF (use for Class-12 Biology — character substitution corruption)
+python3 scripts/pdf_extractor.py upsc_pdfs/Biology/NCERT-Class-12-Biology.pdf \
+  --subject Biology --output dataset_output_final/ --force-ocr
+
+# Preview OCR strategy without extracting
+python3 scripts/pdf_extractor.py upsc_pdfs/Chemistry/ --dry-run
+```
+
+**Key options:**
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `--output DIR` | `./dataset_output` | Where to write chunks |
+| `--resume` | off | Skip PDFs already completed (uses checkpoint files) |
+| `--force-ocr` | off | Force all pages through OCR. Use for character-substitution corrupted PDFs |
+| `--no-ocr` | off | Disable OCR. Fast but misses Type3 / scanned pages |
+| `--chunk-size N` | 2000 | Target characters per chunk (~512 tokens) |
+| `--chunk-overlap R` | 0.10 | 10% overlap between consecutive chunks for context continuity |
+| `--quality-threshold T` | 0.60 | Score below this triggers OCR fallback |
+| `--no-merge` | off | Skip building unified combined file. Use when processing subjects separately |
+| `--merge-only` | off | Skip extraction, just rebuild unified files from subject JSONLs |
+
+**Output per PDF:**
+- Subject JSONL: `dataset_output_final/History/History_chunks.jsonl`
+- Checkpoint: `dataset_output_final/History/NCERT-Class-11-History_metadata.json`
+- Unified: `dataset_output_final/combined/unified_pretrain.jsonl`
+
+---
+
+### 2. pretrain_quality_check.py — NLP Quality Filtering
+
+**What it does in plain terms:**
+Reads the raw 11,912 chunks produced by pdf_extractor.py and runs 11 automated quality checks.
+Any chunk that fails even one check is excluded from the clean file. This removes diagram captions
+mistakenly OCR'd as text, exercise answer keys, mid-sentence fragments, near-duplicate chunks,
+and OCR garbage — all of which would pollute the model's domain knowledge.
+
+**The 11 checks:**
+
+| Check | Code | What it catches | Threshold |
+|-------|------|-----------------|-----------|
+| NLP-1 | Bigram repetition | Looping OCR text (same phrase repeated many times) | > 0.35 |
+| NLP-2 | Avg sentence length | Fragmented text with very short or no sentences | < 5 words |
+| NLP-3 | Type-token ratio | Copy-paste boilerplate with no vocabulary variety | < 0.30 |
+| NLP-4 | OCR noise score | Symbols, maths operators, arrows, PUA characters | > 2.0 per 100 chars |
+| NLP-5 | Alphabetic ratio | Tables, answer keys, equation-heavy pages | < 0.45 |
+| NLP-6 | Near-duplicate MD5 | Identical chunks appearing more than once | exact match |
+| NLP-7 | Boundary coherence | Chunk starts with lowercase (mid-sentence cut) | first char lowercase |
+| NLP-8 | Heading coherence | Heading is equation reference, single char, or chunk ID | pattern match |
+| NLP-9 | Single-char density | > 15% single-letter tokens = diagram or figure OCR | > 0.15 |
+| NLP-10 | Comma clusters | Three or more consecutive commas = dotted table line OCR | >= 2 clusters |
+| NLP-11 | Garbled word ratio | Words with impossible consonant clusters (OCR noise) | > 0.05 |
+
+**Results achieved:**
+- Input: 11,912 raw chunks
+- Output: 9,569 clean chunks (80.3% pass rate)
+- Removed: 1,887 mid-sentence, 462 diagram OCR, 50 repetition, 49 low alpha,
+           45 duplicates, 30 low vocab, 7 comma clusters, 4 garbled, 1 OCR noise
+
+**How to run:**
+
+```bash
+# Run quality check and write clean file
+python3 scripts/pretrain_quality_check.py
+
+# Dry run — see what would be rejected without writing
+python3 scripts/pretrain_quality_check.py --dry-run
+
+# Check a specific subject only
+python3 scripts/pretrain_quality_check.py --subject History
+```
+
+**Output:**
+- `dataset_output_final/combined/unified_pretrain_clean.jsonl` — clean chunks for training
+- `dataset_output_final/combined/pretrain_audit_log.jsonl` — per-chunk audit results
+
+---
+
+### 3. generate_sft_dataset.py — Mains Question-Answer Generation
+
+**What it does in plain terms:**
+This is the core dataset generation script for UPSC Mains training. It reads each clean NCERT
+chunk and asks an LLM (Gemini / GPT-4o-mini / Claude Haiku) to generate 5 UPSC-style
+question-answer pairs based only on the facts in that chunk. The LLM is given strict instructions
+about question format, answer structure, word limit, and writing style — producing answers that
+match real UPSC examiner expectations.
+
+**The generation process per chunk:**
+
+```
+Step 1: Read chunk (subject, heading, text)
+Step 2: Pick 5 question types from the subject-specific pool
+        History   → discuss, critically_examine, comment, how_far, analyse
+        Polity    → critically_examine, evaluate, to_what_extent, do_you_agree
+        Economy   → discuss, evaluate, critically_examine, examine
+        ... (each subject has its own curated pool)
+Step 3: For each question type, pick a starting phrase from its library
+        discuss          → "Discuss the significance of..."
+        critically_examine → "Critically examine the role of..."
+        evaluate         → "Evaluate the contribution of..."
+Step 4: Build a master prompt with:
+        - The NCERT chunk as hidden reference material
+        - 3 worked examples of UPSC-quality Q+A
+        - Strict rules for question and answer writing
+        - Per-pair specifications (type, starting phrase, word limit, answer structure)
+Step 5: Call LLM API → receive JSON array of 5 Q+A objects
+Step 6: Validate each pair (no passage references, no copy-paste, length checks)
+Step 7: Wrap in Gemma 2 chat template and write to output JSONL
+```
+
+**The Master Prompt structure:**
+
+The prompt sent to the LLM has six sections:
+
+```
+SECTION 1 — Reference material
+  Subject: {subject}
+  Paper: {paper}  (GS1 / GS2 / GS3 / GS4 / Essay based on subject)
+  Topic: {section_heading}
+  {chunk text — 2000 chars max}
+
+SECTION 2 — Three worked examples of UPSC Q+A
+  Example 1: "Discuss" type (150 words, 10 marks)
+    Q: Discuss the significance of the Revolt of 1857...
+    A: The Revolt of 1857, India's first large-scale armed uprising...
+       [structured answer with bold sub-headings and numbered points]
+
+  Example 2: "Explain" type (150 words, 10 marks)
+    Q: Explain the structure and functions of the Election Commission of India.
+    A: The Election Commission of India (ECI), established under Article 324...
+
+  Example 3: "Critically examine" type (250 words, 15 marks)
+    Q: Critically examine the role of NITI Aayog in India's development planning.
+    A: NITI Aayog (National Institution for Transforming India), established in 2015...
+       [positive contributions + critical limitations + way forward]
+
+SECTION 3 — Answer style rules
+  1. First sentence must be an assertive factual statement (not "In this answer...")
+  2. Each numbered point: one bold sub-heading + 1-2 sentences of specific content
+  3. Use specific facts: names, dates, article numbers, statistics
+  4. Conclusion: connect to current relevance or way forward (not a summary)
+  5. Never say "as mentioned above", "as we discussed", "in conclusion I have shown"
+  6. Never reference any passage, text, or study material
+
+SECTION 4 — Question rules
+  1. Questions must be completely standalone — exactly as in a real UPSC exam paper
+  2. Must be grounded in what is actually in the reference material
+  3. Do not start multiple questions with the same word
+
+SECTION 5 — Task
+  Generate {n} UPSC Mains Q+A pairs from the reference material above.
+
+SECTION 6 — Per-pair specifications
+  Q+A PAIR 1:
+    Question Type: discuss
+    Start question with: "Discuss the significance of..."
+    Word Limit: 150 words (10 marks)
+    Answer Structure:
+      Introduction (2-3 lines)
+      Key Dimensions (3-4 numbered points from passage)
+      Conclusion (current relevance or way forward)
+
+  Q+A PAIR 2:
+    Question Type: critically_examine
+    Start question with: "Critically examine the role of..."
+    Word Limit: 250 words (15 marks)
+    Answer Structure:
+      Introduction (2-3 lines)
+      Positive Contributions (2-3 from passage)
+      Critical Limitations (2-3 from passage)
+      Way Forward / Conclusion
+
+  ... (pairs 3-5)
+```
+
+**Why this prompt works:**
+The LLM reads the NCERT chunk, understands what is factually covered, and formulates a question
+that is naturally grounded in that content. The starting phrase constraint forces variety — "Discuss",
+"Critically examine", "Evaluate" — matching real UPSC paper distribution. The answer structure
+rules ensure the model learns the exact format examiners reward.
+
+**Post-generation validation (before writing):**
+- Question length >= 20 characters
+- Answer length >= 100 characters
+- Question does not mention "the passage", "the text above", "as described"
+- Answer does not start with the same words as the chunk (copy-paste check)
+
+**How to run:**
+
+```bash
+# Run with Gemini (free tier — 1,500 requests/day)
+python3 scripts/generate_sft_dataset.py --api gemini
+
+# Resume after interruption
+python3 scripts/generate_sft_dataset.py --api gemini --resume
+
+# Test on 10 chunks without writing output
+python3 scripts/generate_sft_dataset.py --api gemini --limit 10 --dry-run
+
+# Generate 3 pairs per chunk instead of 5 (faster, lower cost)
+python3 scripts/generate_sft_dataset.py --api gemini --batch-size 3
+
+# Process only one subject
+python3 scripts/generate_sft_dataset.py --api gemini --subject History
+
+# Add delay between calls to avoid rate limits
+python3 scripts/generate_sft_dataset.py --api gemini --delay 2.0 --resume
+```
+
+**Key options:**
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `--api` | auto-detect | `gemini` / `openai` / `claude` — reads key from env/.env |
+| `--resume` | off | Skip chunks already in sft_v3_progress.json |
+| `--limit N` | all | Process only N chunks (useful for testing) |
+| `--batch-size N` | 5 | Q+A pairs to generate per chunk |
+| `--delay N` | 1.0 | Seconds to wait between API calls (avoid rate limits) |
+| `--subject NAME` | all | Process only this subject |
+| `--dry-run` | off | Print prompts without calling API |
+| `--min-words N` | 80 | Skip chunks shorter than N words |
+
+**Cost estimates:**
+- Gemini 1.5 Flash: Free (1,500 requests/day — takes ~37 days for all 9,569 chunks)
+- GPT-4o-mini: ~USD 15-20 total for all chunks
+- Claude Haiku: ~USD 12 total for all chunks
+
+**Output:**
+- `unified_sft_v3.jsonl` — raw generated pairs
+- `sft_v3_progress.json` — progress tracker (which chunk IDs are done)
+
+---
+
+### 4. extract_real_mcq_from_pdfs.py — Real UPSC MCQ Extraction
+
+**What it does in plain terms:**
+Extracts real UPSC Prelims multiple-choice questions from VisionIAS subject PDFs (2011-2025).
+These are actual past exam questions with answer keys and explanations. The script reads the PDF
+text, identifies question blocks (numbered items with four options), matches them to answer keys,
+and produces Alpaca-format SFT records with 4 question variants per MCQ.
+
+**Four SFT variants generated per raw MCQ:**
+
+1. `answer_mcq` — Given the question with 4 options, pick the correct answer
+2. `explain_correct` — Given question + correct answer, explain why it is correct
+3. `context_based` — Given background context, answer which option is correct
+4. `solve_year` — Answer a question identified by its UPSC exam year
+
+**Answer grounding rule:**
+Every generated answer always starts with: `"The correct answer is (X) — [option text]."`
+This prevents the model from learning to answer without committing to a choice.
+
+**How to run:**
+
+```bash
+# Extract from all VisionIAS PDFs
+python3 scripts/extract_real_mcq_from_pdfs.py
+
+# Extract from one subject only
+python3 scripts/extract_real_mcq_from_pdfs.py --subject Geography
+
+# Generate SFT pairs from already-extracted raw records
+python3 scripts/extract_real_mcq_from_pdfs.py --sft-only
+
+# Run quality check and write clean file
+python3 scripts/extract_real_mcq_from_pdfs.py --quality-check
+```
+
+**Output:**
+- `real_upsc_mcq_raw.jsonl` — 1,323 raw MCQ records
+- `real_upsc_mcq_sft_clean.jsonl` — 2,442 quality-checked Alpaca SFT pairs
+
+---
+
+### 5. generate_mcq_synthetic.py — Synthetic MCQ Generation via GPT-4o
+
+**What it does in plain terms:**
+Uses GPT-4o to generate new MCQs from NCERT pretrain chunks. This supplements the real MCQ
+dataset with NCERT-grounded questions. For each usable chunk, the script asks GPT-4o to write
+one 4-option MCQ with a detailed explanation. Unlike real MCQ extraction (which finds existing
+questions), this script creates questions that have never appeared in a UPSC exam — useful for
+teaching the model about topics that are less represented in PYQ archives.
+
+**Chunk filtering before API call (saves cost):**
+Not all 9,569 clean chunks are sent to the API. Chunks are pre-filtered:
+- Must have >= 80 words
+- Must not start with lowercase (mid-sentence)
+- Heading must not be an equation reference or exercise number
+- Text must not contain repeated word triples (OCR loops)
+- OCR artifacts are cleaned before sending
+
+**Hallucination check after generation:**
+After GPT-4o returns an MCQ, the explanation is checked for proper nouns that appear in the
+explanation but not in the source chunk. If more than 4 such words are found, the MCQ is
+rejected — it means the model invented facts not in the original text.
+
+**How to run:**
+
+```bash
+# Run generation with resume and 1.5s delay between calls
+python3 scripts/generate_mcq_synthetic.py --delay 1.5 --resume
+
+# Test on 5 chunks
+python3 scripts/generate_mcq_synthetic.py --limit 5 --dry-run
+
+# Process one subject only
+python3 scripts/generate_mcq_synthetic.py --subject Biology --resume
+```
+
+**Output:**
+- `synthetic_mcq_raw.jsonl` — generated raw MCQ records
+- `synthetic_mcq_sft_clean.jsonl` — Alpaca SFT pairs after quality check
+
+---
+
+### 6. dataset_quality_check.py — MCQ Dataset Quality Validation
+
+**What it does in plain terms:**
+Runs three automated quality checks on any MCQ JSONL file and reports pass/fail per record.
+Designed to catch structural errors, instruction leakage, and hallucinated content before the
+dataset enters training.
+
+**The three checks:**
+
+**Check 1 — Structural Integrity**
+Verifies that every required Alpaca field is present, the correct answer is one of a/b/c/d,
+all four options appear in the question text, the explanation is at least 15 words, and the
+question type and difficulty labels are from the allowed set.
+
+**Check 2 — Instruction Sanity**
+Verifies the instruction field is clean: no exercise numbers ("3. Which of the following"),
+no OCR artifacts, not truncated mid-sentence, context does not start with lowercase.
+Also checks that no chunk ID format ("biology_ncert_0042") leaked into the instruction.
+
+**Check 3 — Content Grounding**
+For synthetic MCQ records: verifies the answer letter is explicitly referenced in the
+explanation. For real UPSC records: checks that the explanation does not introduce more
+than 4 proper nouns absent from the question (hallucination proxy).
+
+**How to run:**
+
+```bash
+# Check the merged MCQ training file
+python3 scripts/dataset_quality_check.py \
+  --input dataset_output_final/combined/unified_mcq_training_clean.jsonl
+
+# Check all MCQ files and report
+python3 scripts/dataset_quality_check.py --all
+
+# Show only failed records
+python3 scripts/dataset_quality_check.py \
+  --input dataset_output_final/combined/synthetic_mcq_sft_clean.jsonl \
+  --failures-only
+```
+
+**Result achieved:** `unified_mcq_training_clean.jsonl` — 2,496 records at 100% pass rate.
+
+---
+
+### 7. clean_sft_dataset.py — Mains SFT Post-processing
+
+**What it does in plain terms:**
+Cleans the raw `unified_sft_v3.jsonl` before training. Removes four types of bad records:
+
+1. Answers that say "the passage" or "this passage" — invalid because at inference time
+   there is no passage, only the question.
+2. Answers shorter than 60 words — too brief to teach structured answer writing.
+3. Answers containing NCERT page markers like "314 / Social and Political Life" — OCR
+   artifact leaked from the source text into the generated answer.
+4. Answers with common OCR noise patterns from the extraction step.
+
+**How to run:**
+
+```bash
+# Clean the Mains SFT file
+python3 scripts/clean_sft_dataset.py
+
+# Preview what would be removed without writing
+python3 scripts/clean_sft_dataset.py --dry-run
+
+# Clean a custom file
+python3 scripts/clean_sft_dataset.py --input path/to/file.jsonl
+```
+
+---
+
+### 8. merge_sft.py — Merge Multiple SFT Sources
+
+**What it does in plain terms:**
+Combines multiple SFT JSONL files into one deduplicated, shuffled training file. Used to merge
+real MCQ, synthetic MCQ, and past paper SFT records into a single unified MCQ training set.
+Deduplication is by MD5 hash of the instruction+input text.
+
+**How to run:**
+
+```bash
+# Merge all available MCQ sources
+python3 scripts/merge_sft.py
+
+# Merge with subject/type balancing (caps overrepresented categories)
+python3 scripts/merge_sft.py --balance
+
+# Print statistics without writing
+python3 scripts/merge_sft.py --stats-only
+
+# Merge specific files
+python3 scripts/merge_sft.py \
+  --inputs dataset_output_final/combined/real_upsc_mcq_sft_clean.jsonl \
+           dataset_output_final/combined/synthetic_mcq_sft_clean.jsonl
+```
+
+---
+
+### 9. extract_past_papers.py — UPSC Past Paper Q+A Extraction
+
+**What it does in plain terms:**
+Extracts structured question-answer pairs from official UPSC Mains past papers (GS1, GS2, GS3,
+GS4, Essay). Uses both PDF text extraction and optional LLM-assisted answer grounding from
+pretrain chunks. Produces Alpaca-format SFT records from real exam questions.
+
+**How to run:**
+
+```bash
+# Extract questions from all past papers
+python3 scripts/extract_past_papers.py
+
+# Extract from a specific year
+python3 scripts/extract_past_papers.py --year 2024
+
+# Add pretrain-grounded answers
+python3 scripts/extract_past_papers.py --add-answers \
+  --pretrain dataset_output_final/combined/unified_pretrain_clean.jsonl
+```
+
+---
+
+### 10. analyse_question_patterns.py — UPSC Question Pattern Analysis
+
+**What it does in plain terms:**
+Sends UPSC Mains question papers year-by-year to an LLM (GPT-4o or Gemini) and asks it to
+identify recurring topics, trending themes, question type distribution, and answer framework
+requirements for each GS paper. The output `question_patterns.json` is used by
+`generate_sft_dataset.py` to ensure generated Q+A pairs match real UPSC question distribution.
+
+**How to run:**
+
+```bash
+# Analyse with OpenAI (most accurate)
+python3 scripts/analyse_question_patterns.py --api openai
+
+# Analyse with Gemini (free)
+python3 scripts/analyse_question_patterns.py --api gemini
+
+# Statistics only, no LLM (fast)
+python3 scripts/analyse_question_patterns.py --no-llm
+```
+
+**Output:** `dataset_output_final/combined/question_patterns.json`
+
+---
+
+### 11. research_report.py / dashboard.py — Reporting Tools
+
+**What they do:**
+Generate HTML reports showing dataset statistics: chunk counts by subject, quality score
+distributions, question type breakdowns, training data size estimates. Not part of the
+training pipeline — used for monitoring and documentation.
+
+```bash
+python3 scripts/research_report.py    # generates research_report.html
+python3 scripts/dashboard.py          # generates dashboard.html
+python3 scripts/dashboard.py --open   # auto-opens in browser
+```
+
+---
+
+## Model Training
+
+Training is done on Google Colab using the scripts in `colab_training/`.
+
+### Stage 1 — Continued Pre-Training (Domain Adaptation)
+
+**File:** `colab_training/stage1_domain_adaptation.py`
+
+**What it does:** Fine-tunes Gemma 2 2B on `unified_pretrain_clean.jsonl` using QLoRA so the
+model absorbs NCERT/UPSC vocabulary and factual knowledge. No question-answer format — just
+raw next-token prediction on domain text. Sequence packing fills each 2048-token context window
+with multiple short chunks joined by EOS tokens, maximising GPU utilisation.
+
+**Configuration:**
+```
+Base model   : google/gemma-2-2b
+Quantisation : 4-bit NF4 (fits T4 16 GB VRAM)
+LoRA rank    : 16  (alpha=32)
+Target modules: q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj
+Epochs       : 1
+Batch size   : 2 per device  (effective = 16 with gradient accumulation of 8)
+Max seq len  : 2048 tokens with sequence packing
+Optimiser    : paged_adamw_8bit
+Learning rate: 2e-4 (cosine schedule, 5% warmup)
+```
+
+**How to run in Colab:**
+1. Copy each cell from `stage1_domain_adaptation.py` into a Colab notebook
+2. Upload `unified_pretrain_clean.jsonl` to Google Drive at `MyDrive/UPSC_SLM/`
+3. Set `HF_TOKEN` to your HuggingFace token (required for Gemma licence)
+4. Run cells in order: Install → Mount Drive → Login → Load Data → Configure → Train → Save
+
+**Output:** `MyDrive/UPSC_SLM/gemma2_stage1/lora_adapter_stage1/` (~80 MB LoRA weights)
+
+### Stage 2A — Mains SFT (Instruction Fine-Tuning)
+
+Fine-tunes the Stage 1 adapter on `unified_sft_v3_clean.jsonl`. Teaches the model to write
+structured UPSC Mains answers in response to questions. Uses `dataset_text_field="text"` because
+the Gemma chat template is pre-baked into each record — no double-wrapping.
+
+**File:** `colab_training/stage2_sft_training.py`
+
+### Stage 2B — Prelims MCQ SFT
+
+Fine-tunes on `unified_mcq_training_clean.jsonl`. Teaches the model to answer and explain
+Prelims multiple-choice questions in Alpaca format.
+
+---
+
+## Environment Setup
+
+### Python environment (local Mac)
+```bash
+cd ~/Downloads/DataSets
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pymupdf pdfplumber pdf2image pillow pytesseract langdetect datasets openai
+```
+
+### System dependencies (macOS)
 ```bash
 brew install tesseract tesseract-lang poppler
 ```
 
-### Verify Setup
-```bash
-tesseract --version       # should show 5.x.x
-python3 -c "import fitz, pdfplumber, pytesseract; print('OK')"
+### API keys
+Create `env/.env` with the following (never commit this file):
 ```
+GEMINI_API_KEY=your_gemini_key_here
+OPENAI_API_KEY=your_openai_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+```
+
+Scripts auto-detect which API to use based on which key is present.
+
+### Colab
+In Google Colab, store your HuggingFace token as a Colab secret named `HF_TOKEN` and access
+it via `userdata.get('HF_TOKEN')`. Never hardcode tokens in notebook cells.
 
 ---
 
-## Quick Start
+## Current Status
 
-```bash
-cd $HOME/Downloads/DataSets
-source .venv/bin/activate
-
-# Single subject folder
-python3 scripts/pdf_extractor.py upsc_pdfs/History/ --output dataset_output_final/
-
-# All subjects at once
-python3 scripts/pdf_extractor.py upsc_pdfs/ --output dataset_output_final/
-
-# Single file
-python3 scripts/pdf_extractor.py upsc_pdfs/Biology/NCERT-Class-11-Biology.pdf \
-  --subject Biology --output dataset_output_final/
-```
+| Stage | Status | Output |
+|-------|--------|--------|
+| PDF Extraction | Complete | 11,912 raw chunks |
+| Pretrain Quality Filter | Complete | 9,569 clean chunks |
+| Mains Q+A Generation | In Progress (~30K of ~47K done) | unified_sft_v3_clean.jsonl |
+| Real MCQ Extraction | Complete | 1,323 raw MCQs, 2,442 SFT pairs |
+| Synthetic MCQ Generation | Pending (21 / ~6,500 done) | synthetic_mcq_raw.jsonl |
+| MCQ Quality Check | Complete | 2,496 records at 100% pass rate |
+| Stage 1 CPT Training | Not yet run | — |
+| Stage 2A Mains SFT | Not yet run | — |
+| Stage 2B MCQ SFT | Not yet run | — |
 
 ---
 
-## CLI Reference
+## Planned Next Steps
 
-```
-python3 scripts/pdf_extractor.py [inputs...] [options]
-```
-
-### Input
-| Argument | Description |
-|----------|-------------|
-| `input` | PDF file, subject folder, or top-level folder containing subject sub-folders |
-
-### Core Options
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--output DIR` | `./dataset_output` | Output directory |
-| `--subject NAME` | folder name | Subject label override |
-| `--no-merge` | off | Skip creating unified combined files |
-| `--merge-only` | off | Skip extraction; just rebuild unified files from existing subject JSONLs |
-| `--resume` | off | Skip PDFs that already have a `_metadata.json` checkpoint |
-
-### OCR Options
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--force-ocr` | off | Force OCR on every page, bypassing quality scoring. Use for PDFs with character-substitution corruption (e.g. NCERT Class-12 Biology) |
-| `--no-ocr` | off | Disable OCR entirely — fast, but Type3/scanned pages are skipped |
-| `--ocr-dpi N` | `300` | DPI for PDF→image conversion |
-| `--ocr-lang LANG` | `eng+hin` | Tesseract language string |
-
-### Chunking Options
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--chunk-size N` | `2000` | Target chunk size in characters (~512 tokens) |
-| `--chunk-overlap R` | `0.10` | Overlap ratio between consecutive chunks (0.0–0.5) |
-| `--quality-threshold T` | `0.60` | Minimum quality score to accept text extraction; below this triggers OCR fallback |
-
-### Utilities
-| Flag | Description |
-|------|-------------|
-| `--dry-run` | Classify pages and show OCR plan without extracting anything |
-| `--log-level` | `DEBUG` / `INFO` / `WARNING` / `ERROR` |
+1. Complete `generate_sft_dataset.py` run (Mains Q+A — currently running)
+2. Run full synthetic MCQ generation: `python3 scripts/generate_mcq_synthetic.py --delay 1.5 --resume`
+3. Rebuild and re-quality-check MCQ training set after synthetic generation completes
+4. Run Stage 1 CPT on Colab with `unified_pretrain_clean.jsonl`
+5. Run Stage 2A Mains SFT with `unified_sft_v3_clean.jsonl`
+6. Run Stage 2B MCQ SFT with `unified_mcq_training_clean.jsonl`
+7. Evaluate model on held-out UPSC questions (2024 / 2025 papers)
+8. Quantise merged model to GGUF format for Ollama / mobile deployment
 
 ---
 
-## Common Workflows
+## Technical Decisions and Rationale
 
-### 1. Process subjects one at a time (recommended for large datasets)
-```bash
-# Process each subject separately — skip unified merge each time
-python3 scripts/pdf_extractor.py upsc_pdfs/History/   --output dataset_output_final/ --no-merge
-python3 scripts/pdf_extractor.py upsc_pdfs/Geography/ --output dataset_output_final/ --no-merge
-python3 scripts/pdf_extractor.py upsc_pdfs/Polity/    --output dataset_output_final/ --no-merge
+### Why Gemma 2 2B and not a larger model?
 
-# When all subjects are done, merge everything into unified files
-python3 scripts/pdf_extractor.py --merge-only --output dataset_output_final/
-```
+Gemma 2 2B runs on a T4 GPU (free Colab tier) with 4-bit quantisation. The target deployment
+is a mobile application where inference must run on-device without internet. A 2B model at
+4-bit quantisation is approximately 1.5 GB — feasible for a mid-range Android device.
 
-### 2. Resume an interrupted run
-```bash
-# If a run crashes, re-run with --resume — already-completed PDFs are skipped
-python3 scripts/pdf_extractor.py upsc_pdfs/History/ \
-  --output dataset_output_final/ --no-merge --resume
-```
+### Why QLoRA and not full fine-tuning?
 
-### 3. Fix a PDF with character-substitution corruption
-```bash
-# Delete its checkpoint so it re-processes
-rm dataset_output_final/Biology/NCERT-Class-12-Biology_metadata.json
+Full fine-tuning of a 2B model requires ~16 GB VRAM in fp16 and ~40 GB in fp32. QLoRA loads
+the base model in 4-bit (frozen) and trains only the low-rank adapter matrices (~1-4% of
+parameters). This reduces VRAM to under 10 GB while achieving fine-tuning quality comparable
+to full precision on domain adaptation tasks.
 
-# Re-extract with forced OCR
-python3 scripts/pdf_extractor.py upsc_pdfs/Biology/NCERT-Class-12-Biology.pdf \
-  --subject Biology --output dataset_output_final/ --no-merge --force-ocr
-```
+### Why two training stages?
 
-### 4. Dry run — check OCR strategy before committing time
-```bash
-python3 scripts/pdf_extractor.py upsc_pdfs/Chemistry/ --dry-run
-```
+Stage 1 (CPT) injects vocabulary and factual knowledge from raw text. If you skip to Stage 2
+directly, the model cannot answer questions about topics it has never seen described in prose.
+Stage 2 (SFT) then teaches the conversational format. Running them in the wrong order produces
+a model that knows the format but not the facts.
 
----
+### Why Alpaca format for MCQ and Gemma chat format for Mains?
 
-## How It Works — Per-Page Strategy
+Gemma chat format (`<start_of_turn>user...<end_of_turn>`) is already baked into
+`unified_sft_v3_clean.jsonl` and is read directly via `dataset_text_field="text"` without
+re-wrapping. Alpaca format (instruction-input-output triples) is used for MCQ because it is
+model-agnostic — if the base model is swapped for Llama 3 or Mistral in future, the MCQ
+dataset requires no format conversion.
 
-Every page is classified independently before any text extraction:
+### Why generate Mains Q+A from NCERT rather than scrape coaching sites?
 
-```
-For each page:
-  1. PDFTypeDetector → classify font type
-     ├── Type3 / image-only → OCR directly (batch all such pages first)
-     └── Clean / Mixed → PyMuPDF extraction → quality score
-                              ├── score ≥ 0.60 → accept
-                              └── score < 0.60 → try PDFPlumber
-                                                    ├── score ≥ 0.60 → accept
-                                                    └── score < 0.60 → OCR fallback (batched)
-```
-
-OCR fallback pages are collected across the whole PDF and sent to Tesseract in a **single batch**, avoiding the 20+ minute per-page stall that naive per-page OCR causes.
-
-### Quality Scoring Formula
-```
-overall = 0.40 × word_density   (are tokens real words?)
-        + 0.35 × symbol_score   (low dingbat/PUA ratio?)
-        + 0.15 × repeat_score   (no repeated-char runs?)
-        + 0.10 × cid_score      (no (cid:N) leakage?)
-```
-
-> **Note:** Character-substitution corruption (e.g. `lliese` for "these", `orgmisms` for "organisms") scores falsely high because chars are still alphabetic. Use `--force-ocr` for such PDFs.
+Scraped coaching site content has copyright issues and variable quality — some sites copy
+answers from other sites, some are outdated, some are too brief for training. NCERT text is
+government-published, freely distributable, and factually authoritative. Generating Q+A from
+it via LLM produces answers grounded in verified facts while maintaining the UPSC answer
+structure.
 
 ---
 
-## Output Structure
+## Data Schema Reference for LLM Consumers
 
-```
-dataset_output_final/
-├── History/
-│   ├── History_chunks.jsonl              ← extracted chunks for this subject
-│   ├── NCERT-Class-11-History_metadata.json   ← per-PDF stats (checkpoint)
-│   └── NCERT-Class-12-History_metadata.json
-├── Geography/
-│   └── ...
-└── combined/
-    ├── unified_pretrain.jsonl            ← Stage 1: plain text for continued pre-training
-    ├── unified_sft.jsonl                 ← Stage 2: Gemma 2 chat format for SFT
-    ├── hf_dataset/                       ← HuggingFace Dataset (90/10 train/test split)
-    │   ├── train/
-    │   └── test/
-    └── dataset_summary.json             ← chunk counts by subject, language, strategy
-```
+If you are an LLM (Copilot, Codex, Claude, etc.) reading this file to understand the codebase:
 
-### Chunk Schema (JSONL record)
-```json
-{
-  "id": "history_ncert_class_11_history_0042",
-  "text": "The Mughal Empire was founded in 1526...",
-  "subject": "History",
-  "source_file": "NCERT-Class-11-History.pdf",
-  "source_path": "NCERT-Class-11-History.pdf",
-  "page_range": [45, 47],
-  "section_heading": "THE MUGHAL EMPIRE",
-  "chunk_index": 42,
-  "total_chunks": 317,
-  "word_count": 289,
-  "char_count": 1874,
-  "extraction_strategy": "pymupdf",
-  "quality_score": 0.9982,
-  "language": "en"
-}
-```
+**Primary training files and what they contain:**
+- `unified_pretrain_clean.jsonl` — 9,569 records, fields: id, text, subject, source_file, section_heading, word_count, quality_score
+- `unified_sft_v3_clean.jsonl` — 30,183 records, fields: id, text, subject, q_type, word_limit, marks, question, answer_preview, source_chunk
+- `unified_mcq_training_clean.jsonl` — 2,496 records, fields: id, instruction, input, question, answer, explanation, subject, question_type, difficulty, exam, format, source_ids
 
-### Metadata Schema (per-PDF checkpoint)
-```json
-{
-  "source_file": "NCERT-Class-11-History.pdf",
-  "subject": "History",
-  "pages_total": 260,
-  "pages_text": 208,
-  "pages_ocr": 52,
-  "pages_failed": 0,
-  "chunks_generated": 317,
-  "mean_quality_score": 0.9971,
-  "raw_chars": 892341,
-  "cleaned_chars": 887124,
-  "char_retention_pct": 99.42,
-  "processing_time_sec": 583.2,
-  "errors": []
-}
-```
+**Script → output file mapping:**
+- `pdf_extractor.py` → `unified_pretrain.jsonl`
+- `pretrain_quality_check.py` → `unified_pretrain_clean.jsonl`
+- `generate_sft_dataset.py` → `unified_sft_v3.jsonl`, `sft_v3_progress.json`
+- `clean_sft_dataset.py` → `unified_sft_v3_clean.jsonl`
+- `extract_real_mcq_from_pdfs.py` → `real_upsc_mcq_raw.jsonl`, `real_upsc_mcq_sft_clean.jsonl`
+- `generate_mcq_synthetic.py` → `synthetic_mcq_raw.jsonl`, `synthetic_mcq_sft_clean.jsonl`
+- `dataset_quality_check.py` → validates any MCQ file in place
+- `merge_sft.py` → `unified_mcq_training_clean.jsonl`
 
----
+**All scripts read API keys from `env/.env` — never from hardcoded strings.**
 
-## Understanding the Log Output
+**All scripts support `--resume` to continue interrupted runs without reprocessing.**
 
-```
-============================================================
-EXTRACTING: HISTORY  (9 PDFs)
-============================================================
-  Processing: NCERT-Class-11-History.pdf
-    OCR: 52/260 pages              ← 52 pages sent directly to OCR (Type3/image)
-    OCR fallback: 3 low-quality pages  ← 3 more pages failed quality check, OCR'd
-    → 317 chunks | quality=0.97 | text=35 ocr=225 failed=0
-    chars: 892,341 raw → 887,124 clean (99.4% retained)
-
-  ──────────────────────────────────────────────────────
-  SUBJECT SUMMARY: History
-  ──────────────────────────────────────────────────────
-  PDFs processed : 9
-  Total pages    : 1431  (failed: 0)
-  Total chunks   : 1971
-  Avg chunk len  : 1,842 chars
-  Raw chars      : 4,213,445
-  Clean chars    : 4,198,320
-  Char retention : 99.6%       ← should be >95%; if <80%, investigate
-  ──────────────────────────────────────────────────────
-```
-
-| Field | What to look for |
-|-------|-----------------|
-| `quality` | Should be ≥ 0.90; below 0.80 means extraction issues |
-| `failed` | Should be 0; any failures = pages with no usable text |
-| `char retention` | >95% = normal; <80% = check for over-aggressive cleaning |
-
----
-
-## Training Pipeline
-
-### Stage 1 — Continued Pre-training (domain knowledge)
-```python
-# Use unified_pretrain.jsonl
-# Each record: {"id": "...", "text": "clean domain text", ...}
-
-from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-2b")
-# Tokenizer adds BOS/EOS automatically — do NOT add them manually in the JSONL
-encoded = tokenizer(text, add_special_tokens=True)
-```
-
-### Stage 2 — Instruction Fine-tuning (Q&A behaviour)
-```python
-# Use unified_sft.jsonl
-# Each record already formatted with Gemma 2 chat tokens:
-# <start_of_turn>user\n...<end_of_turn>\n<start_of_turn>model\n...<end_of_turn>
-
-# When tokenizing SFT records, set add_special_tokens=False
-# (BOS/EOS are already embedded in the template)
-encoded = tokenizer(text, add_special_tokens=False)
-```
-
-> **Training order:** Always run Stage 1 first. Stage 2 teaches conversational behaviour but relies on domain knowledge injected in Stage 1.
-
----
-
-## Troubleshooting
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `tesseract not available` | Tesseract not installed | `brew install tesseract tesseract-lang` |
-| `pdf2image failed` | Poppler not installed | `brew install poppler` |
-| Corrupt text in output despite high quality score | Character-substitution font encoding | Re-run with `--force-ocr` |
-| Duplicate chunks in JSONL | Single-file re-run appended instead of replaced | Delete the subject JSONL and re-run |
-| Very low char retention (<70%) | Over-cleaning or blank PDF pages | Check `errors` field in `_metadata.json` |
-| OCR taking 20+ min per PDF | Old per-page OCR path hit | Update to latest script version (uses batch OCR) |
-
----
-
-## PDF Subjects
-
-| Subject | Folder | Notes |
-|---------|--------|-------|
-| Art | `upsc_pdfs/Art/` | Mix of clean and Type3 pages |
-| Biology | `upsc_pdfs/Biology/` | Class-12 needs `--force-ocr` |
-| Chemistry | `upsc_pdfs/Chemistry/` | Mostly Type3 — always OCR |
-| Economics | `upsc_pdfs/Economics/` | Generally clean |
-| Geography | `upsc_pdfs/Geography/` | Generally clean |
-| History | `upsc_pdfs/History/` | Mix; some scanned pages |
-| Physics | `upsc_pdfs/Physics/` | Mostly Type3 — always OCR |
-| Polity | `upsc_pdfs/Polity/` | Generally clean |
-| Science | `upsc_pdfs/Science/` | Mix |
-| Sociology | `upsc_pdfs/Sociology/` | Generally clean |
+**The progress tracker pattern:** Each long-running generation script writes a `*_progress.json`
+file containing a set of already-processed chunk IDs. On resume, these IDs are loaded and
+filtered out before starting the generation loop.
