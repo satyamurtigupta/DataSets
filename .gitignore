@@ -1,0 +1,47 @@
+# ── Credentials — NEVER commit these ─────────────────────────────────────────
+env/
+.env
+*.env
+**/.env
+**/secrets.json
+**/credentials.json
+
+# ── Large dataset files — too big for GitHub ──────────────────────────────────
+dataset_output/
+dataset_output_final/
+upsc_papers/
+logs/
+*.jsonl
+*.json
+!upsc_rules.json
+
+# ── macOS junk ────────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+slm_env/
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Generated reports ─────────────────────────────────────────────────────────
+*.html
+research_report.html
+dashboard.html
+
+# ── Logs and temp ─────────────────────────────────────────────────────────────
+*.log
+*.txt
+!README.md

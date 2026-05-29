@@ -9,7 +9,7 @@
 # 1. Open Google Drive in Finder (install Google Drive for Desktop if not done)
 # 2. Create folder:  My Drive / UPSC_SLM /
 # 3. Copy these two files into it:
-#    - /Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_pretrain.jsonl
+#    - /Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_pretrain_clean.jsonl
 #    - /Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_sft.jsonl
 
 # ── OPTION B : Push to HuggingFace Hub (better for large files) ───────────────
@@ -26,7 +26,7 @@ REPO_ID     = f"{HF_USERNAME}/upsc-gemma2-pretrain"
 # Load local JSONL
 pretrain_ds = load_dataset(
     "json",
-    data_files="/Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_pretrain.jsonl",
+    data_files="/Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_pretrain_clean.jsonl",
     split="train"
 )
 
@@ -48,7 +48,7 @@ print(f"Dataset pushed to https://huggingface.co/datasets/{REPO_ID}")
 from pathlib import Path
 
 files = {
-    "unified_pretrain.jsonl": Path("/Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_pretrain.jsonl"),
+    "unified_pretrain_clean.jsonl": Path("/Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_pretrain_clean.jsonl"),
     "unified_sft.jsonl":      Path("/Users/satyamurti/Downloads/DataSets/dataset_output_final/combined/unified_sft.jsonl"),
 }
 

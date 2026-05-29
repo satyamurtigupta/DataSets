@@ -22,8 +22,8 @@
 
 
 # ── CELL 2 : Mount Google Drive & set paths ───────────────────────────────────
-# Upload dataset_output_final/combined/unified_pretrain.jsonl to your Drive first.
-# Suggested path: MyDrive/UPSC_SLM/unified_pretrain.jsonl
+# Upload dataset_output_final/combined/unified_pretrain_clean.jsonl to your Drive first.
+# Suggested path: MyDrive/UPSC_SLM/unified_pretrain_clean.jsonl
 
 from google.colab import drive
 drive.mount('/content/drive')
@@ -32,7 +32,7 @@ import os
 
 # ── Edit these paths ──
 DRIVE_BASE        = "/content/drive/MyDrive/UPSC_SLM"
-PRETRAIN_JSONL    = f"{DRIVE_BASE}/unified_pretrain.jsonl"   # your dataset
+PRETRAIN_JSONL    = f"{DRIVE_BASE}/unified_pretrain_clean.jsonl"   # your dataset
 OUTPUT_DIR        = f"{DRIVE_BASE}/gemma2_stage1"            # checkpoints saved here
 HF_MODEL_ID       = "google/gemma-2-2b"                      # base model
 HF_TOKEN          = ""   # paste your HuggingFace token (needs Gemma licence accepted)
@@ -40,7 +40,7 @@ HF_TOKEN          = ""   # paste your HuggingFace token (needs Gemma licence acc
 # Verify the dataset file exists
 assert os.path.exists(PRETRAIN_JSONL), (
     f"Dataset not found at {PRETRAIN_JSONL}\n"
-    "Upload unified_pretrain.jsonl to Google Drive first."
+    "Upload unified_pretrain_clean.jsonl to Google Drive first."
 )
 print(f"✓ Dataset found: {PRETRAIN_JSONL}")
 
