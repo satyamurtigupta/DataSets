@@ -222,9 +222,13 @@ def main():
             by_subject[subj] += 1
         for subj, count in sorted(by_subject.items()):
             print("  %-15s : %d records" % (subj, count))
+        remaining_in_log = len(all_rejections) - len(candidates)
+        print("")
+        print("DRY RUN — would remove %d records from rejection log, %d would remain" % (
+            len(candidates), remaining_in_log))
         return
 
-    # Append
+    # Append recovered records to output file
     with open(args.output, "a", encoding="utf-8") as fh:
         for rec in to_write:
             fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -238,6 +242,39 @@ def main():
     for subj, count in sorted(by_subject.items()):
         print("  %-15s : %d records added" % (subj, count))
 
+    # Remove recovered records from the rejection log
+    # Build a set of (subject, source_file, section_heading, word_count) keys
+    # for records we just recovered, so we can filter them out
+    recovered_keys = set()
+    for r in candidates:
+        key = (
+            r.get("subject", ""),
+            r.get("source_file", ""),
+            r.get("section_heading", ""),
+            r.get("word_count", 0),
+            r.get("rejection_reason", ""),
+        )
+        recovered_keys.add(key)
+
+    remaining = []
+    for r in all_rejections:
+        key = (
+            r.get("subject", ""),
+            r.get("source_file", ""),
+            r.get("section_heading", ""),
+            r.get("word_count", 0),
+            r.get("rejection_reason", ""),
+        )
+        if key not in recovered_keys:
+            remaining.append(r)
+
+    with open(args.reject_log, "w", encoding="utf-8") as fh:
+        for r in remaining:
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+    removed_from_log = len(all_rejections) - len(remaining)
+    print("")
+    print("Rejection log updated: removed %d, kept %d" % (removed_from_log, len(remaining)))
     print("")
     print("Done. Regenerate dashboard:")
     print("  python3 scripts/generate_dashboard.py --open")
